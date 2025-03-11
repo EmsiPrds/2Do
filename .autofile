@@ -1,0 +1,27 @@
+.init {
+  $ taskkill /F /IM node.exe
+  $ code .
+}
+dev {
+  $ wr http://localhost:3000
+  + cd 2do-backend && npm run dev
+  + cd 2do-frontend && npm run dev
+}
+
+build {
+  + cd 2do-backend && npm run build
+  + cd 2do-frontend && npm run build
+
+}
+
+publish {
+  + cd 2do-backend && npm run publish
+  + cd 2do-frontend && npm run publish
+
+}
+
+
+share {
+  + sshtunnel
+  + code serve-web --host 0.0.0.0 --port 5000 --without-connection-token --accept-server-license-terms
+}
