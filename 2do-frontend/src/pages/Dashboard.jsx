@@ -70,6 +70,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login"; // You can use React Router's navigate if preferred
+  };
+
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -77,7 +82,12 @@ export default function Dashboard() {
   return (
     <div className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow space-y-4">
       <h1 className="text-3xl font-bold text-primary text-center">My Tasks</h1>
-
+      <button
+        onClick={handleLogout}
+        className="text-sm text-red-500 underline hover:text-red-700"
+      >
+        Logout
+      </button>
       <form onSubmit={handleAddTask} className="flex gap-2">
         <input
           type="text"
