@@ -1,10 +1,12 @@
-import "./App.css";
+import "./index.css";
 
 function App() {
   return (
     <>
-      <div className="Landing">
-        <h1>Hello World! This is my 2Do App</h1>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <h1 className="text-5xl font-bold text-primary font-sans">
+          2Do App is Ready!
+        </h1>
       </div>
     </>
   );
