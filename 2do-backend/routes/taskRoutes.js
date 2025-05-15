@@ -50,10 +50,17 @@ router.get("/", authMiddleware, async (req, res) => {
 // 📌 Update Task (PUT) – Currently toggles `completed` status only
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
+    const { title, description, dueDate, completed } = req.body;
+
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
     if (!task) return res.status(404).json({ message: "Task not found." });
 
-    task.completed = !task.completed; // Toggle completion
+    // ✅ Update fields if they are provided
+    if (title !== undefined) task.title = title;
+    if (description !== undefined) task.description = description;
+    if (dueDate !== undefined) task.dueDate = dueDate;
+    if (completed !== undefined) task.completed = completed;
+
     await task.save();
     res.json(task);
   } catch (error) {
