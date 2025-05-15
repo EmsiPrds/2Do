@@ -9,21 +9,17 @@ router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, description, dueDate } = req.body;
 
-    // ✅ Validate and Trim Title
     if (!title || title.trim() === "") {
       return res.status(400).json({ message: "Task title is required." });
     }
 
-    const trimmedTitle = title.trim();
-
-    // ✅ Optional: Validate dueDate if provided
     if (dueDate && isNaN(Date.parse(dueDate))) {
       return res.status(400).json({ message: "Invalid due date format." });
     }
 
     const newTask = new Task({
       user: req.user.id,
-      title: trimmedTitle,
+      title: title.trim(),
       description,
       dueDate,
     });
@@ -35,7 +31,7 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// 📌 Get All Tasks for Logged-in User (GET)
+// 📌 Get All Tasks (GET)
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user.id }).sort({
@@ -47,15 +43,14 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// 📌 Update Task (PUT) – Currently toggles `completed` status only
+// 📌 Update Task (PUT)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const { title, description, dueDate, completed } = req.body;
-
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
+
     if (!task) return res.status(404).json({ message: "Task not found." });
 
-    // ✅ Update fields if they are provided
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
     if (dueDate !== undefined) task.dueDate = dueDate;
@@ -75,6 +70,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
       _id: req.params.id,
       user: req.user.id,
     });
+
     if (!task) return res.status(404).json({ message: "Task not found." });
 
     res.json({ message: "Task deleted successfully." });

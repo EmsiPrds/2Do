@@ -15,7 +15,7 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "Username is required." });
     }
 
-    const trimmedUsername = username.trim();
+    const trimmedUsername = username.trim().toLowerCase();
 
     // Check if the user already exists
     const existingUser = await User.findOne({ username: trimmedUsername });

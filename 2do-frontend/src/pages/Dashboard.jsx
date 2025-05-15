@@ -6,6 +6,8 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const fetchTasks = async () => {
     try {
@@ -20,8 +22,10 @@ export default function Dashboard() {
   const handleAddTask = async (e) => {
     e.preventDefault();
     try {
-      await authRequest("tasks", { title }, "POST");
+      await authRequest("tasks", { title, description, dueDate }, "POST");
       setTitle("");
+      setDescription("");
+      setDueDate("");
       fetchTasks();
     } catch (err) {
       console.error("Failed to add task:", err);
@@ -88,17 +92,29 @@ export default function Dashboard() {
       >
         Logout
       </button>
-      <form onSubmit={handleAddTask} className="flex gap-2">
+      <form onSubmit={handleAddTask} className="flex flex-col gap-2">
         <input
           type="text"
-          placeholder="Enter a new task..."
-          className="flex-grow p-2 border rounded"
+          placeholder="Enter a new task title..."
+          className="p-2 border rounded"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
-        <button className="bg-primary text-white px-4 py-2 rounded hover:bg-blue-600">
-          Add
+        <textarea
+          placeholder="Description (optional)..."
+          className="p-2 border rounded"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        ></textarea>
+        <input
+          type="date"
+          className="p-2 border rounded"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+        <button className="bg-primary text-white py-2 rounded hover:bg-blue-600">
+          Add Task
         </button>
       </form>
 
