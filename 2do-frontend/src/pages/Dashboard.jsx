@@ -6,6 +6,7 @@ import {
   FaEdit,
   FaTrash,
   FaSignOutAlt,
+  FaUserCircle,
 } from "react-icons/fa";
 
 export default function Dashboard() {
@@ -20,6 +21,11 @@ export default function Dashboard() {
   const [filter, setFilter] = useState("all");
   const [sortOption, setSortOption] = useState("created_newest");
 
+  // Avatar State
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const username = "Vincent"; // Replace this dynamically if needed
+
   const fetchTasks = async () => {
     try {
       const data = await authRequest("tasks", null, "GET");
@@ -27,6 +33,64 @@ export default function Dashboard() {
     } catch (err) {
       alert(err.message || "Failed to fetch tasks.");
     }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/user/avatar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setAvatarUrl(result.avatar);
+        alert("Avatar updated successfully!");
+      } else {
+        alert(result.message || "Failed to upload avatar.");
+      }
+    } catch (err) {
+      alert(err.message || "Failed to upload avatar.");
+    }
+  };
+
+  const renderAvatar = () => {
+    if (avatarUrl) {
+      return (
+        <img
+          src={`http://localhost:5000${avatarUrl}`}
+          alt="Avatar"
+          className="w-10 h-10 rounded-full object-cover cursor-pointer"
+          onClick={toggleProfileModal}
+        />
+      );
+    }
+    return (
+      <div
+        className="w-10 h-10 rounded-full bg-yellow-500 text-white flex items-center justify-center cursor-pointer font-bold text-lg"
+        onClick={toggleProfileModal}
+      >
+        {username.charAt(0).toUpperCase()}
+      </div>
+    );
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
+  const toggleProfileModal = () => {
+    setShowProfileModal(!showProfileModal);
   };
 
   const handleAddTask = async (e) => {
@@ -81,11 +145,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-  };
-
   const toggleDescription = (taskId) => {
     setExpandedTaskIds((prev) =>
       prev.includes(taskId)
@@ -122,19 +181,41 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* ✅ Header */}
+      {/* Header */}
       <header className="w-full bg-brand-yellow p-4 flex justify-between items-center shadow-md fixed top-0 left-0 z-50">
         <h1 className="text-2xl font-bold text-brand-dark">2Do</h1>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-brand-dark font-medium hover:brightness-110 transition"
-        >
-          <FaSignOutAlt className="text-lg" /> Logout
-        </button>
+        <div className="flex items-center gap-4">
+          {renderAvatar()}
+          <button
+            onClick={handleLogout}
+            className="text-brand-dark font-medium hover:brightness-110 transition"
+          >
+            <FaSignOutAlt className="text-lg" />
+          </button>
+        </div>
       </header>
 
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md w-80 text-center space-y-4">
+            <h2 className="text-xl font-bold">User Profile</h2>
+            {renderAvatar()}
+            <p className="font-semibold">{username}</p>
+            <input type="file" onChange={handleAvatarUpload} className="mt-2" />
+            <button
+              onClick={toggleProfileModal}
+              className="mt-4 bg-brand-yellow px-4 py-2 rounded font-semibold"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
       <main className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow space-y-4 pt-20">
-        {/* ✅ Task Summary */}
+        {/* Task Summary */}
         <div className="flex justify-around bg-brand-light p-4 rounded shadow text-center my-4">
           <div>
             <h2 className="text-xl font-bold">{totalTasks}</h2>
@@ -154,7 +235,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ✅ Filter & Sort */}
+        {/* Filter & Sort */}
         <div className="flex justify-between mb-4 gap-2">
           <select
             value={filter}
@@ -171,14 +252,14 @@ export default function Dashboard() {
             onChange={(e) => setSortOption(e.target.value)}
             className="p-2 border rounded text-sm w-1/2"
           >
-            <option value="created_newest">Created Date (Newest)</option>
-            <option value="created_oldest">Created Date (Oldest)</option>
-            <option value="due_earliest">Due Date (Earliest)</option>
-            <option value="due_latest">Due Date (Latest)</option>
+            <option value="created_newest">Created (Newest)</option>
+            <option value="created_oldest">Created (Oldest)</option>
+            <option value="due_earliest">Due (Earliest)</option>
+            <option value="due_latest">Due (Latest)</option>
           </select>
         </div>
 
-        {/* ✅ Add Task Form */}
+        {/* Add Task Form */}
         <form onSubmit={handleAddTask} className="flex flex-col gap-2">
           <input
             type="text"
@@ -205,7 +286,7 @@ export default function Dashboard() {
           </button>
         </form>
 
-        {/* ✅ Task List */}
+        {/* Task List */}
         <ul className="space-y-2">
           {filteredTasks.map((task) => {
             const isExpanded = expandedTaskIds.includes(task._id);
