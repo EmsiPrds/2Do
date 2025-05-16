@@ -54,7 +54,12 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
     if (dueDate !== undefined) task.dueDate = dueDate;
-    if (completed !== undefined) task.completed = completed;
+
+    // ✅ Handle completion status and completedAt timestamp
+    if (completed !== undefined) {
+      task.completed = completed;
+      task.completedAt = completed ? new Date() : null;
+    }
 
     await task.save();
     res.json(task);
