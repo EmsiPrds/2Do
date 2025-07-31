@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { authRequest } from "../api";
 import { useNavigate } from "react-router-dom";
+import { authRequest } from "../api";
+
+// Login Accout:
+// Username: cent
+// Password: Password123!
 
 export default function Login() {
   const navigate = useNavigate();
@@ -32,17 +36,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-light flex items-center justify-center px-4">
+    <div className="flex items-center justify-center min-h-screen px-4 bg-primary">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-full max-w-sm space-y-4"
+        className="w-full max-w-sm p-8 space-y-4 bg-white rounded shadow-md"
       >
         <h2 className="text-2xl font-bold text-center text-brand-dark">
           Login
         </h2>
 
         <div>
-          <label className="block text-sm mb-1 text-brand-dark">Username</label>
+          <label className="block mb-1 text-sm text-brand-dark">Username</label>
           <input
             type="text"
             className="w-full p-2 border rounded"
@@ -50,43 +54,43 @@ export default function Login() {
             onChange={(e) => setUsername(e.target.value)}
           />
           {errors.username && (
-            <p className="text-xs text-red-500 mt-1">{errors.username}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.username}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm mb-1 text-brand-dark">Password</label>
+          <label className="block mb-1 text-sm text-brand-dark">Password</label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              className="w-full p-2 border rounded pr-10"
+              className="w-full p-2 pr-10 border rounded"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-1/2 right-2 transform -translate-y-1/2 text-sm text-brand-dark"
+              className="absolute text-sm transform -translate-y-1/2 top-1/2 right-2 text-brand-dark"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
           {errors.password && (
-            <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.password}</p>
           )}
         </div>
 
         <button
           type="submit"
-          className="w-full bg-brand-yellow text-brand-dark py-2 rounded font-semibold hover:brightness-110 transition"
+          className="w-full py-2 font-semibold transition rounded bg-brand-yellow text-brand-dark hover:brightness-110"
         >
           Login
         </button>
 
-        <p className="text-center text-sm text-brand-dark">
+        <p className="text-sm text-center text-brand-dark">
           Don't have an account?{" "}
           <span
-            className="text-brand-yellow underline cursor-pointer"
+            className="underline cursor-pointer text-brand-yellow"
             onClick={() => navigate("/signup")}
           >
             Sign Up

@@ -9,7 +9,7 @@ export default {
       colors: {
         // 🎨 Your Custom Colors
         brand: {
-          dark: "#212121",
+          dark: "#000000",
           yellow: "#FDCE00",
           light: "#EFEFEF",
         },
