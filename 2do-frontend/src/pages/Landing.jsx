@@ -13,7 +13,7 @@ export default function LandingPage() {
           position: "absolute", // Position it behind the content
           top: 0,
           left: 0,
-          width: "100%",
+          width: "100vw",
           height: "100%", // Full screen height
           zIndex: -1, // Ensure it stays in the background
         }}
@@ -29,16 +29,16 @@ export default function LandingPage() {
         Stay organized and manage your tasks effortlessly with a modern and
         clean interface.
       </p>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row">
         <button
           onClick={() => navigate("/login")}
-          className="px-6 py-2 font-semibold transition rounded bg-brand-yellow text-brand-dark hover:brightness-110"
+          className="px-32 py-2 font-semibold transition rounded-full lg:px-10 bg-brand-yellow text-brand-dark hover:brightness-110"
         >
           Login
         </button>
         <button
           onClick={() => navigate("/signup")}
-          className="px-6 py-2 font-semibold transition border-2 rounded border-brand-yellow text-brand-light hover:bg-brand-yellow hover:text-brand-dark"
+          className="px-32 py-2 font-semibold transition border-2 rounded-full lg:px-6 border-brand-yellow text-brand-light hover:bg-brand-yellow hover:text-brand-dark"
         >
           Sign Up
         </button>
