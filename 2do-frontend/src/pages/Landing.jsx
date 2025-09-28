@@ -22,12 +22,11 @@ export default function LandingPage() {
       </div>
 
       {/* Main Content */}
-      <h1 className="mb-4 text-4xl font-bold text-center md:text-5xl">
-        Welcome to <span className="text-brand-yellow">2Do</span> App
+      <h1 className="text-yellow mb-4 text-4xl font-bold text-center md:text-5xl">
+        2Do App
       </h1>
       <p className="max-w-md mb-8 text-lg text-center">
-        Stay organized and manage your tasks effortlessly with a modern and
-        clean interface.
+        "Turn To-Dos into Done"
       </p>
       <div className="flex flex-col gap-4 lg:flex-row">
         <button
