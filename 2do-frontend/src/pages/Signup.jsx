@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authRequest } from "../api";
 import { useNavigate } from "react-router-dom";
+import {ArrowLeft} from "lucide-react";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -41,6 +42,12 @@ export default function Signup() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded shadow-md w-full max-w-sm space-y-4"
       >
+        <div>
+          <ArrowLeft
+            className="w-6 h-6 text-brand-dark cursor-pointer"
+            onClick={() => navigate("/")}
+          />
+        </div>
         <h2 className="text-2xl font-bold text-center text-brand-dark">
           Sign Up
         </h2>

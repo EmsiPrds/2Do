@@ -22,8 +22,8 @@ export default function LandingPage() {
         <Threads amplitude={5} distance={0} enableMouseInteraction={true} />
       </div>
 
-      <header className="absolute -translate-x-1/2 top-10 left-1/2">
-        <Logo className="h-auto w-36" />
+      <header className="absolute -translate-x-1/2 top-10 left-1/2 ">
+        <Logo className="h-auto w-24" />
       </header>
       {/* Main Content */}
       <h1 className="mb-4 text-4xl font-bold text-center md:text-5xl">

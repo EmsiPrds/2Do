@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authRequest } from "../api";
+import {ArrowLeft} from "lucide-react";
 
 // Login Accout:
 // Username: cent
@@ -41,6 +42,12 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm p-8 space-y-4 bg-white rounded shadow-md"
       >
+        <div>
+          <ArrowLeft
+            className="w-6 h-6 text-brand-dark cursor-pointer"
+            onClick={() => navigate("/")}
+          />
+        </div>
         <h2 className="text-2xl font-bold text-center text-brand-dark">
           Login
         </h2>
