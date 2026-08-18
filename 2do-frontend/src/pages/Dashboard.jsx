@@ -1,421 +1,759 @@
 import { useEffect, useState } from "react";
 import { authRequest } from "../api";
 import {
-  FaCheckCircle,
-  FaUndo,
-  FaEdit,
-  FaTrash,
-  FaSignOutAlt,
-  FaUserCircle,
-} from "react-icons/fa";
+  Check,
+  RotateCcw,
+  Pencil,
+  Trash2,
+  LogOut,
+  Plus,
+  X,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
+  Calendar,
+  Flag,
+} from "lucide-react";
+import Logo from "../assets/svg";
+import QuickAdd from "../components/QuickAdd";
+import Subtasks from "../components/Subtasks";
 
+/* ─────────────────────────────────────
+   Priority config
+───────────────────────────────────── */
+const PRIORITIES = {
+  high:   { label: "High",   color: "text-red-400",    bg: "bg-red-400/10",    border: "border-red-400/40",    dot: "bg-red-400",    flag: "text-red-400" },
+  medium: { label: "Medium", color: "text-brand-yellow", bg: "bg-brand-yellow/10", border: "border-brand-yellow/40", dot: "bg-brand-yellow", flag: "text-brand-yellow" },
+  low:    { label: "Low",    color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/40", dot: "bg-emerald-400", flag: "text-emerald-400/70" },
+};
+
+/* Priority left-border accent on task card */
+const PRIORITY_BORDER = {
+  high:   "border-l-red-400/60",
+  medium: "border-l-brand-yellow/50",
+  low:    "border-l-emerald-400/40",
+};
+
+/* ─────────────────────────────────────
+   Priority picker component
+───────────────────────────────────── */
+function PriorityPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const current = PRIORITIES[value] ?? PRIORITIES.medium;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition duration-200
+                    ${current.bg} ${current.border} ${current.color}`}
+      >
+        <Flag className="w-3 h-3" />
+        {current.label}
+        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-20 rounded-xl border border-white/10 bg-[#1a1a1a] shadow-xl overflow-hidden min-w-[130px]">
+          {Object.entries(PRIORITIES).map(([key, cfg]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { onChange(key); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition duration-150
+                          ${value === key ? `${cfg.bg} ${cfg.color}` : "text-white/60 hover:bg-white/8 hover:text-white"}`}
+            >
+              <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+              {cfg.label}
+              {value === key && <Check className="w-3 h-3 ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Compact inline badge shown on task cards */
+function PriorityBadge({ priority }) {
+  const cfg = PRIORITIES[priority] ?? PRIORITIES.medium;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${cfg.bg} ${cfg.color}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+/* ─────────────────────────────────────
+   Other sub-components
+───────────────────────────────────── */
+function Avatar({ avatarUrl, username, onClick }) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={`http://localhost:5000${avatarUrl}`}
+        alt="Avatar"
+        onClick={onClick}
+        className="w-8 h-8 rounded-full object-cover cursor-pointer ring-2 ring-brand-yellow ring-offset-2 ring-offset-black transition hover:opacity-90"
+      />
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      className="w-8 h-8 rounded-full bg-brand-yellow text-brand-dark flex items-center justify-center font-bold text-sm cursor-pointer transition hover:brightness-105"
+      aria-label="Open profile"
+    >
+      {username?.charAt(0).toUpperCase() ?? "?"}
+    </button>
+  );
+}
+
+function StatCard({ label, value, accent }) {
+  return (
+    <div className="flex-1 flex flex-col items-center gap-1 py-4 lg:py-5">
+      <span className={`text-2xl lg:text-3xl font-bold ${accent}`}>{value}</span>
+      <span className="text-xs text-white/40 font-medium">{label}</span>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────
+   Dashboard
+───────────────────────────────────── */
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
+
+  // add form
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // edit
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [editingPriority, setEditingPriority] = useState("medium");
+
   const [expandedTaskIds, setExpandedTaskIds] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [sortOption, setSortOption] = useState("created_newest");
+  const [priorityFilter, setPriorityFilter] = useState("all"); // "all" | "high" | "medium" | "low"
+  const [sortOption, setSortOption] = useState("priority"); // default: priority sort
+  const [showSort, setShowSort] = useState(false);
 
-  // Avatar State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const username = "Vincent"; // Replace this dynamically if needed
+  const [username, setUsername] = useState("You");
 
+  /* ── data ── */
   const fetchTasks = async () => {
     try {
       const data = await authRequest("tasks", null, "GET");
-      setTasks(data);
+      setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
-      alert(err.message || "Failed to fetch tasks.");
+      console.error("fetchTasks failed:", err);
     }
   };
 
+  useEffect(() => { fetchTasks(); }, []);
+
+  /* ── avatar ── */
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append("avatar", file);
-
     try {
-      const response = await fetch("http://localhost:5000/api/user/avatar", {
+      const res = await fetch("http://localhost:5000/api/user/avatar", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: formData,
       });
-
-      const result = await response.json();
-      if (response.ok) {
-        setAvatarUrl(result.avatar);
-        alert("Avatar updated successfully!");
-      } else {
-        alert(result.message || "Failed to upload avatar.");
-      }
-    } catch (err) {
-      alert(err.message || "Failed to upload avatar.");
-    }
+      const result = await res.json();
+      if (res.ok) setAvatarUrl(result.avatar);
+    } catch { /* noop */ }
   };
 
-  const renderAvatar = () => {
-    if (avatarUrl) {
-      return (
-        <img
-          src={`http://localhost:5000${avatarUrl}`}
-          alt="Avatar"
-          className="w-10 h-10 rounded-full object-cover cursor-pointer"
-          onClick={toggleProfileModal}
-        />
-      );
-    }
-    return (
-      <div
-        className="w-10 h-10 rounded-full bg-yellow-500 text-white flex items-center justify-center cursor-pointer font-bold text-lg"
-        onClick={toggleProfileModal}
-      >
-        {username.charAt(0).toUpperCase()}
-      </div>
+  /* ── task actions ── */
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    try {
+      await authRequest("tasks", { title, description, dueDate, priority }, "POST");
+      setTitle(""); setDescription(""); setDueDate(""); setPriority("medium");
+      setShowAddForm(false);
+      fetchTasks();
+    } catch { /* noop */ }
+  };
+
+  /* Quick-add handler (called from QuickAdd component) */
+  const handleQuickAdd = async ({ title: qTitle, dueDate: qDueDate }) => {
+    if (!qTitle?.trim()) return;
+    await authRequest("tasks", { title: qTitle.trim(), dueDate: qDueDate, priority: "medium" }, "POST");
+    fetchTasks();
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm("Delete this task?")) return;
+    try {
+      await authRequest(`tasks/${taskId}`, null, "DELETE");
+      fetchTasks();
+    } catch { /* noop */ }
+  };
+
+  const toggleTaskCompletion = async (taskId, current) => {
+    try {
+      await authRequest(`tasks/${taskId}`, { completed: !current }, "PUT");
+      fetchTasks();
+    } catch { /* noop */ }
+  };
+
+  const handleUpdateTask = async (taskId) => {
+    try {
+      await authRequest(`tasks/${taskId}`, {
+        title: editingTitle,
+        description: editingDescription,
+        priority: editingPriority,
+      }, "PUT");
+      setEditingTaskId(null);
+      fetchTasks();
+    } catch { /* noop */ }
+  };
+
+  const startEdit = (task) => {
+    setEditingTaskId(task._id);
+    setEditingTitle(task.title);
+    setEditingDescription(task.description || "");
+    setEditingPriority(task.priority || "medium");
+  };
+
+  const cancelEdit = () => {
+    setEditingTaskId(null);
+    setEditingTitle("");
+    setEditingDescription("");
+    setEditingPriority("medium");
+  };
+
+  /* Optimistic subtask update — replaces the task in local state */
+  const handleSubtaskUpdate = (updatedTask) => {
+    setTasks((prev) => prev.map((t) => t._id === updatedTask._id ? updatedTask : t));
+  };
+
+  const toggleDescription = (id) =>
+    setExpandedTaskIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
 
-  const toggleProfileModal = () => {
-    setShowProfileModal(!showProfileModal);
-  };
-
-  const handleAddTask = async (e) => {
-    e.preventDefault();
-    try {
-      await authRequest("tasks", { title, description, dueDate }, "POST");
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      fetchTasks();
-    } catch (err) {
-      alert(err.message || "Failed to add task.");
-    }
-  };
-
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await authRequest(`tasks/${taskId}`, null, "DELETE");
-      fetchTasks();
-    } catch (err) {
-      alert(err.message || "Failed to delete task.");
-    }
-  };
-
-  const toggleTaskCompletion = async (taskId, currentStatus) => {
-    try {
-      await authRequest(
-        `tasks/${taskId}`,
-        { completed: !currentStatus },
-        "PUT"
-      );
-      fetchTasks();
-    } catch (err) {
-      alert(err.message || "Failed to update task completion.");
-    }
-  };
-
-  const handleUpdateTask = async (taskId) => {
-    try {
-      await authRequest(
-        `tasks/${taskId}`,
-        { title: editingTitle, description: editingDescription },
-        "PUT"
-      );
-      setEditingTaskId(null);
-      setEditingTitle("");
-      setEditingDescription("");
-      fetchTasks();
-    } catch (err) {
-      alert(err.message || "Failed to update task.");
-    }
-  };
-
-  const toggleDescription = (taskId) => {
-    setExpandedTaskIds((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
-    );
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+  /* ── derived ── */
+  const PRIORITY_WEIGHT = { high: 0, medium: 1, low: 2 };
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((task) => task.completed).length;
+  const completedTasks = tasks.filter((t) => t.completed).length;
   const pendingTasks = totalTasks - completedTasks;
+  const highUrgent = tasks.filter((t) => !t.completed && t.priority === "high").length;
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  let filteredTasks = tasks.filter((task) => {
-    if (filter === "completed") return task.completed;
-    if (filter === "pending") return !task.completed;
-    return true;
-  });
+  const filteredTasks = Array.isArray(tasks) ? tasks
+    .filter((t) => {
+      // status filter
+      if (filter === "completed") return t.completed === true;
+      if (filter === "pending") return t.completed !== true;
+      return true;
+    })
+    .filter((t) => {
+      // priority filter
+      if (priorityFilter === "all") return true;
+      const p = t.priority || "medium";
+      return p === priorityFilter;
+    })
+    .sort((a, b) => {
+      if (sortOption === "priority") {
+        const pa = PRIORITY_WEIGHT[a.priority || "medium"] ?? 1;
+        const pb = PRIORITY_WEIGHT[b.priority || "medium"] ?? 1;
+        if (pa !== pb) return pa - pb;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      if (sortOption === "created_newest") return new Date(b.createdAt) - new Date(a.createdAt);
+      if (sortOption === "created_oldest") return new Date(a.createdAt) - new Date(b.createdAt);
+      if (sortOption === "due_earliest") return new Date(a.dueDate || Infinity) - new Date(b.dueDate || Infinity);
+      if (sortOption === "due_latest") return new Date(b.dueDate || 0) - new Date(a.dueDate || 0);
+      return 0;
+    }) : [];
 
-  filteredTasks.sort((a, b) => {
-    if (sortOption === "created_newest")
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    if (sortOption === "created_oldest")
-      return new Date(a.createdAt) - new Date(b.createdAt);
-    if (sortOption === "due_earliest")
-      return new Date(a.dueDate || Infinity) - new Date(b.dueDate || Infinity);
-    if (sortOption === "due_latest")
-      return new Date(b.dueDate || 0) - new Date(a.dueDate || 0);
-    return 0;
-  });
+  const panel = "rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm";
 
+  /* ─────────────────────────────────────
+     Render
+  ───────────────────────────────────── */
   return (
-    <>
-      {/* Header */}
-      <header className="w-full bg-brand-yellow p-4 flex justify-between items-center shadow-md fixed top-0 left-0 z-50">
-        <h1 className="text-2xl font-bold text-brand-dark">2Do</h1>
-        <div className="flex items-center gap-4">
-          {renderAvatar()}
-          <button
-            onClick={handleLogout}
-            className="text-brand-dark font-medium hover:brightness-110 transition"
-          >
-            <FaSignOutAlt className="text-lg" />
-          </button>
+    <div className="relative min-h-screen bg-brand-dark text-white overflow-x-hidden">
+
+      {/* Radial glow */}
+      <div
+        className="pointer-events-none fixed z-0 top-0 left-1/2 -translate-x-1/2"
+        style={{
+          width: "min(100vw, 900px)",
+          height: "500px",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(253,206,0,0.07) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* ════════════ HEADER ════════════ */}
+      <header className="sticky top-0 z-40 border-b border-white/8 bg-brand-dark/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Logo className="h-auto w-12 opacity-90" />
+            {/* High-urgency alert pill */}
+            {highUrgent > 0 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-400/10 border border-red-400/25 text-red-400 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                {highUrgent} urgent
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <Avatar avatarUrl={avatarUrl} username={username} onClick={() => setShowProfileModal(true)} />
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-white/40 hover:text-white transition duration-200"
+              aria-label="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Profile Modal */}
+      {/* ════════════ PROFILE MODAL ════════════ */}
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-80 text-center space-y-4">
-            <h2 className="text-xl font-bold">User Profile</h2>
-            {renderAvatar()}
-            <p className="font-semibold">{username}</p>
-            <input type="file" onChange={handleAvatarUpload} className="mt-2" />
-            <button
-              onClick={toggleProfileModal}
-              className="mt-4 bg-brand-yellow px-4 py-2 rounded font-semibold"
-            >
-              Close
-            </button>
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center sm:items-center"
+          onClick={() => setShowProfileModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 space-y-5 bg-[#111] border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-white">Profile</h2>
+              <button onClick={() => setShowProfileModal(false)} className="text-white/40 hover:text-white transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <Avatar avatarUrl={avatarUrl} username={username} onClick={() => {}} />
+              <span className="font-medium text-white">{username}</span>
+            </div>
+            <div>
+              <label className="form-label-dark">Change Avatar</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="block w-full text-sm text-white/40
+                           file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+                           file:bg-white/10 file:text-white/70 file:font-medium
+                           hover:file:bg-white/15 transition cursor-pointer"
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow space-y-4 pt-20">
-        {/* Task Summary */}
-        <div className="flex justify-around bg-brand-light p-4 rounded shadow text-center my-4">
-          <div>
-            <h2 className="text-xl font-bold">{totalTasks}</h2>
-            <p className="text-gray-600 text-sm">Total</p>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-green-600">
-              {completedTasks}
-            </h2>
-            <p className="text-gray-600 text-sm">Completed</p>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-yellow-500">
-              {pendingTasks}
-            </h2>
-            <p className="text-gray-600 text-sm">Pending</p>
-          </div>
-        </div>
+      {/* ════════════ MAIN ════════════ */}
+      <main className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-6 pb-16">
+        <div className="flex flex-col lg:flex-row lg:gap-8 xl:gap-10">
 
-        {/* Filter & Sort */}
-        <div className="flex justify-between mb-4 gap-2">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="p-2 border rounded text-sm w-1/2"
-          >
-            <option value="all">All Tasks</option>
-            <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-          </select>
+          {/* ══ SIDEBAR ══ */}
+          <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
 
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="p-2 border rounded text-sm w-1/2"
-          >
-            <option value="created_newest">Created (Newest)</option>
-            <option value="created_oldest">Created (Oldest)</option>
-            <option value="due_earliest">Due (Earliest)</option>
-            <option value="due_latest">Due (Latest)</option>
-          </select>
-        </div>
+            {/* Stats */}
+            <div className={`flex lg:flex-col divide-x lg:divide-x-0 lg:divide-y divide-white/8 ${panel}`}>
+              <StatCard label="Total"   value={totalTasks}     accent="text-white" />
+              <StatCard label="Done"    value={completedTasks} accent="text-emerald-400" />
+              <StatCard label="Pending" value={pendingTasks}   accent="text-brand-yellow" />
+            </div>
 
-        {/* Add Task Form */}
-        <form onSubmit={handleAddTask} className="flex flex-col gap-2">
-          <input
-            type="text"
-            placeholder="Task Title..."
-            className="p-2 border rounded"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-          <textarea
-            placeholder="Description (optional)..."
-            className="p-2 border rounded"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
-          <input
-            type="date"
-            className="p-2 border rounded"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-          <button className="bg-brand-yellow text-brand-dark py-2 rounded font-semibold hover:brightness-110 transition">
-            Add Task
-          </button>
-        </form>
+            {/* Progress */}
+            {totalTasks > 0 && (
+              <div className={`hidden lg:block ${panel} px-5 py-4 space-y-2`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/40 font-medium">Progress</span>
+                  <span className="text-xs font-semibold text-brand-yellow">{progress}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-brand-yellow transition-all duration-500"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-        {/* Task List */}
-        <ul className="space-y-2">
-          {filteredTasks.map((task) => {
-            const isExpanded = expandedTaskIds.includes(task._id);
+            {/* Status filter */}
+            <div className={`${panel} p-4 space-y-2`}>
+              <p className="form-label-dark">Status</p>
+              <div className="flex lg:flex-col gap-1.5">
+                {["all", "pending", "completed"].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`flex-1 lg:flex-none px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 text-left ${
+                      filter === f
+                        ? "bg-brand-yellow text-brand-dark"
+                        : "text-white/50 hover:bg-white/8 hover:text-white"
+                    }`}
+                  >
+                    {f === "all" ? "All tasks" : f === "pending" ? "Pending" : "Completed"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            return (
-              <li
-                key={task._id}
-                className={`flex flex-col p-4 border rounded space-y-2 ${
-                  task.completed ? "bg-green-100" : "bg-gray-100"
+            {/* Priority filter */}
+            <div className={`${panel} p-4 space-y-2`}>
+              <p className="form-label-dark">Priority</p>
+              <div className="flex lg:flex-col gap-1.5">
+                {[
+                  { key: "all",    label: "All priorities", dot: "bg-white/30",    active: "bg-white/10 text-white" },
+                  { key: "high",   label: "High",           dot: "bg-red-400",     active: "bg-red-400/15 text-red-400" },
+                  { key: "medium", label: "Medium",         dot: "bg-brand-yellow", active: "bg-brand-yellow/15 text-brand-yellow" },
+                  { key: "low",    label: "Low",            dot: "bg-emerald-400", active: "bg-emerald-400/15 text-emerald-400" },
+                ].map(({ key, label, dot, active }) => (
+                  <button
+                    key={key}
+                    onClick={() => setPriorityFilter(key)}
+                    className={`flex-1 lg:flex-none flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 text-left ${
+                      priorityFilter === key
+                        ? active
+                        : "text-white/50 hover:bg-white/8 hover:text-white"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort — desktop */}
+            <div className={`hidden lg:block ${panel} p-4 space-y-2`}>
+              <p className="form-label-dark">Sort by</p>
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="input-dark"
+              >
+                <option value="priority">Priority (High → Low)</option>
+                <option value="created_newest">Created — Newest first</option>
+                <option value="created_oldest">Created — Oldest first</option>
+                <option value="due_earliest">Due date — Earliest first</option>
+                <option value="due_latest">Due date — Latest first</option>
+              </select>
+            </div>
+
+          </aside>
+
+          {/* ══ TASK FEED ══ */}
+          <section className="flex-1 min-w-0 mt-4 lg:mt-0 space-y-3">
+
+            {/* Mobile sort toggle */}
+            <div className="flex items-center justify-end lg:hidden">
+              <button
+                onClick={() => setShowSort(!showSort)}
+                className={`flex items-center gap-1.5 text-xs font-medium transition duration-200 ${
+                  showSort ? "text-brand-yellow" : "text-white/40 hover:text-white"
                 }`}
               >
-                <div className="flex justify-between items-start">
-                  {editingTaskId === task._id ? (
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Sort
+              </button>
+            </div>
+
+            {showSort && (
+              <div className={`lg:hidden ${panel} px-4 py-3`}>
+                <label className="form-label-dark">Sort by</label>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="input-dark mt-1"
+                >
+                  <option value="priority">Priority (High → Low)</option>
+                  <option value="created_newest">Created — Newest first</option>
+                  <option value="created_oldest">Created — Oldest first</option>
+                  <option value="due_earliest">Due date — Earliest first</option>
+                  <option value="due_latest">Due date — Latest first</option>
+                </select>
+              </div>
+            )}
+
+            {/* ── Quick add bar ── */}
+            <QuickAdd onAdd={handleQuickAdd} />
+
+            {/* ── Add task form ── */}
+            {showAddForm ? (
+              <div className={`${panel} p-5 space-y-4`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-white">New Task</span>
+                  <button onClick={() => setShowAddForm(false)} className="text-white/30 hover:text-white transition">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleAddTask} className="space-y-4">
+
+                  {/* Title row */}
+                  <div>
+                    <label className="form-label-dark">Title</label>
                     <input
                       type="text"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      className="flex-grow p-1 border rounded mr-2"
+                      className="input-dark"
+                      placeholder="What needs to be done?"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      autoFocus
                     />
-                  ) : (
-                    <span
-                      className={`font-semibold ${
-                        task.completed ? "line-through text-gray-500" : ""
-                      }`}
-                    >
-                      {task.title}
-                    </span>
-                  )}
-
-                  <div className="flex gap-2">
-                    {editingTaskId === task._id ? (
-                      <>
-                        <button
-                          onClick={() => handleUpdateTask(task._id)}
-                          title="Save"
-                        >
-                          <FaCheckCircle className="text-green-600 text-lg" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingTaskId(null);
-                            setEditingTitle("");
-                            setEditingDescription("");
-                          }}
-                          title="Cancel"
-                        >
-                          <FaUndo className="text-gray-500 text-lg" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() =>
-                            toggleTaskCompletion(task._id, task.completed)
-                          }
-                          title={task.completed ? "Undo" : "Complete"}
-                        >
-                          <FaCheckCircle
-                            className={`text-lg ${
-                              task.completed
-                                ? "text-gray-500"
-                                : "text-green-600"
-                            }`}
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingTaskId(task._id);
-                            setEditingTitle(task.title);
-                            setEditingDescription(task.description || "");
-                          }}
-                          title="Edit"
-                        >
-                          <FaEdit className="text-yellow-500 text-lg" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTask(task._id)}
-                          title="Delete"
-                        >
-                          <FaTrash className="text-red-500 text-lg" />
-                        </button>
-                      </>
-                    )}
                   </div>
-                </div>
 
-                {/* Description */}
-                {editingTaskId === task._id ? (
-                  <textarea
-                    value={editingDescription}
-                    onChange={(e) => setEditingDescription(e.target.value)}
-                    className="p-2 border rounded text-sm"
-                    rows={2}
-                  ></textarea>
-                ) : (
-                  task.description && (
-                    <p className="text-sm text-gray-600 pl-2 break-words">
-                      {isExpanded
-                        ? task.description
-                        : `${task.description.slice(0, 100)}`}
-                      {task.description.length > 100 && (
+                  {/* Priority + Due date row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="form-label-dark">Priority</label>
+                      <PriorityPicker value={priority} onChange={setPriority} />
+                    </div>
+                    <div>
+                      <label className="form-label-dark">
+                        Due Date <span className="normal-case font-normal text-white/25">(optional)</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="input-dark"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="form-label-dark">
+                      Description <span className="normal-case font-normal text-white/25">(optional)</span>
+                    </label>
+                    <textarea
+                      className="input-dark resize-none"
+                      placeholder="Add some details…"
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button type="submit" className="btn-primary">Add Task</button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddForm(false)}
+                      className="px-5 py-3.5 rounded-xl border border-white/15 text-white/50 text-sm font-medium
+                                 hover:border-white/30 hover:text-white transition duration-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
+                           border border-dashed border-white/15 text-sm text-white/40
+                           hover:border-brand-yellow/50 hover:text-brand-yellow transition duration-200"
+              >
+                <Plus className="w-4 h-4" />
+                Add a task
+              </button>
+            )}
+
+            {/* ── Task list ── */}
+            {filteredTasks.length === 0 ? (
+              <div className="text-center py-20 text-white/20 text-sm">
+                {filter === "completed"
+                  ? "No completed tasks yet."
+                  : filter === "pending"
+                  ? "Nothing pending — great work!"
+                  : "No tasks yet. Add one above."}
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {filteredTasks.map((task) => {
+                  const isExpanded = expandedTaskIds.includes(task._id);
+                  const isEditing = editingTaskId === task._id;
+                  const taskPriority = task.priority ?? "medium";
+                  const borderAccent = PRIORITY_BORDER[taskPriority];
+
+                  return (
+                    <li
+                      key={task._id}
+                      className={`rounded-2xl border-l-4 border border-white/10 px-4 py-4 space-y-2.5 transition duration-200
+                                  ${borderAccent}
+                                  ${task.completed
+                                    ? "bg-white/[0.03] opacity-55"
+                                    : "bg-white/5 hover:bg-white/8 hover:border-white/15"
+                                  } backdrop-blur-sm`}
+                    >
+                      {/* Row — checkbox + title + actions */}
+                      <div className="flex items-start gap-3">
                         <button
-                          onClick={() => toggleDescription(task._id)}
-                          className="ml-2 text-brand-yellow underline text-xs"
+                          onClick={() => !isEditing && toggleTaskCompletion(task._id, task.completed)}
+                          className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition duration-200 ${
+                            task.completed
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "border-white/20 hover:border-emerald-400"
+                          }`}
+                          aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
                         >
-                          {isExpanded ? "View Less" : "View More"}
+                          {task.completed && <Check className="w-3 h-3" strokeWidth={3} />}
                         </button>
-                      )}
-                    </p>
-                  )
-                )}
 
-                {/* Dates */}
-                {task.dueDate && (
-                  <p className="text-xs text-gray-500 pl-2">
-                    Due: {new Date(task.dueDate).toLocaleDateString()}
-                  </p>
-                )}
-                {task.completed && task.completedAt && (
-                  <p className="text-xs text-green-600 pl-2">
-                    Completed on:{" "}
-                    {new Date(task.completedAt).toLocaleDateString()}
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                        <div className="flex-1 min-w-0">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              className="input-dark py-2 text-sm"
+                              autoFocus
+                            />
+                          ) : (
+                            <span
+                              className={`text-sm font-medium leading-snug break-words ${
+                                task.completed ? "line-through text-white/30" : "text-white"
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={() => handleUpdateTask(task._id)}
+                                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-400/10 transition"
+                                aria-label="Save"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="p-1.5 rounded-lg text-white/30 hover:bg-white/10 hover:text-white transition"
+                                aria-label="Cancel"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => startEdit(task)}
+                                className="p-1.5 rounded-lg text-white/30 hover:bg-white/10 hover:text-white transition"
+                                aria-label="Edit"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTask(task._id)}
+                                className="p-1.5 rounded-lg text-white/30 hover:bg-red-500/10 hover:text-red-400 transition"
+                                aria-label="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Priority picker (edit mode) or badge (view mode) */}
+                      {isEditing ? (
+                        <div className="ml-8">
+                          <label className="form-label-dark mb-1.5">Priority</label>
+                          <PriorityPicker value={editingPriority} onChange={setEditingPriority} />
+                        </div>
+                      ) : (
+                        <div className="ml-8">
+                          <PriorityBadge priority={taskPriority} />
+                        </div>
+                      )}
+
+                      {/* Subtasks */}
+                      {!isEditing && (
+                        <Subtasks task={task} onUpdate={handleSubtaskUpdate} />
+                      )}
+
+                      {/* Description */}
+                      {isEditing ? (
+                        <textarea
+                          value={editingDescription}
+                          onChange={(e) => setEditingDescription(e.target.value)}
+                          className="input-dark text-sm resize-none ml-8"
+                          rows={2}
+                          placeholder="Description…"
+                        />
+                      ) : (
+                        task.description && (
+                          <div className="ml-8">
+                            <p className="text-xs text-white/40 leading-relaxed break-words">
+                              {isExpanded || task.description.length <= 120
+                                ? task.description
+                                : `${task.description.slice(0, 120)}…`}
+                            </p>
+                            {task.description.length > 120 && (
+                              <button
+                                onClick={() => toggleDescription(task._id)}
+                                className="mt-1 flex items-center gap-0.5 text-xs text-brand-yellow/70 hover:text-brand-yellow font-medium transition"
+                              >
+                                {isExpanded
+                                  ? <><ChevronUp className="w-3 h-3" />Less</>
+                                  : <><ChevronDown className="w-3 h-3" />More</>}
+                              </button>
+                            )}
+                          </div>
+                        )
+                      )}
+
+                      {/* Meta — dates */}
+                      {(task.dueDate || (task.completed && task.completedAt)) && (
+                        <div className="ml-8 flex flex-wrap gap-3">
+                          {task.dueDate && (
+                            <span className="flex items-center gap-1 text-xs text-white/30">
+                              <Calendar className="w-3 h-3" />
+                              Due {new Date(task.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
+                          {task.completed && task.completedAt && (
+                            <span className="flex items-center gap-1 text-xs text-emerald-400/70">
+                              <Check className="w-3 h-3" />
+                              Done {new Date(task.completedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
       </main>
-    </>
+    </div>
   );
 }

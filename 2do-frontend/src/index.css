@@ -1,5 +1,73 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-brand-dark bg-white;
+  }
+}
+
+@layer components {
+  /* ── Inputs — light (dashboard) ── */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-xl border border-brand-border bg-white text-sm text-brand-dark placeholder-brand-muted
+           transition duration-200 ease-smooth outline-none
+           focus:border-brand-yellow focus:shadow-input-focus;
+  }
+
+  /* ── Inputs — dark (auth pages) ── */
+  .input-dark {
+    @apply w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder-white/30
+           transition duration-200 ease-smooth outline-none backdrop-blur-sm
+           focus:border-brand-yellow focus:bg-white/10;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply w-full py-3.5 px-6 rounded-xl bg-brand-yellow text-brand-dark font-semibold text-sm
+           transition duration-200 ease-smooth
+           hover:brightness-105 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-brand-yellow/40;
+  }
+
+  .btn-ghost {
+    @apply py-3 px-6 rounded-xl border border-brand-border text-brand-dark font-medium text-sm
+           transition duration-200 ease-smooth
+           hover:bg-brand-surface active:scale-[0.98];
+  }
+
+  .btn-ghost-dark {
+    @apply w-full py-3.5 px-6 rounded-xl border border-white/15 text-white/60 font-medium text-sm
+           transition duration-200 ease-smooth
+           hover:border-white/35 hover:text-white active:scale-[0.98];
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-brand-border;
+  }
+
+  .card-dark {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md;
+  }
+
+  /* ── Labels ── */
+  .form-label {
+    @apply block text-xs font-semibold text-brand-muted uppercase tracking-wider mb-1.5;
+  }
+
+  .form-label-dark {
+    @apply block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5;
+  }
+}

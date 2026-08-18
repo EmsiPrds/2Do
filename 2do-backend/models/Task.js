@@ -1,12 +1,24 @@
 import mongoose from "mongoose";
 
-const TaskSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  title: { type: String, required: true },
-  description: { type: String },
-  dueDate: { type: Date },
+const SubtaskSchema = new mongoose.Schema({
+  title:     { type: String, required: true },
   completed: { type: Boolean, default: false },
-  completedAt: { type: Date }, // ✅ Track when task is completed
+  createdAt: { type: Date, default: Date.now },
+});
+
+const TaskSchema = new mongoose.Schema({
+  user:      { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  title:     { type: String, required: true },
+  description: { type: String },
+  dueDate:   { type: Date },
+  completed: { type: Boolean, default: false },
+  completedAt: { type: Date },
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high"],
+    default: "medium",
+  },
+  subtasks:  { type: [SubtaskSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 
