@@ -1,73 +1,134 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
+  *, *::before, *::after {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
   }
 
   html {
     scroll-behavior: smooth;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   body {
     @apply font-sans text-brand-dark bg-white;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Scrollbar — minimal */
+  ::-webkit-scrollbar        { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.12); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+  /* Date input — remove native calendar icon tint */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.3);
   }
 }
 
 @layer components {
-  /* ── Inputs — light (dashboard) ── */
-  .input-base {
-    @apply w-full px-4 py-3 rounded-xl border border-brand-border bg-white text-sm text-brand-dark placeholder-brand-muted
-           transition duration-200 ease-smooth outline-none
-           focus:border-brand-yellow focus:shadow-input-focus;
+
+  /* ─── Surface panel ─── */
+  .panel {
+    @apply rounded-2xl border border-ink-4 bg-ink-5 backdrop-blur-sm;
   }
 
-  /* ── Inputs — dark (auth pages) ── */
+  .panel-elevated {
+    @apply rounded-2xl bg-[#0f0f0f] border border-ink-4;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  /* ─── Inputs ─── */
   .input-dark {
-    @apply w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder-white/30
-           transition duration-200 ease-smooth outline-none backdrop-blur-sm
-           focus:border-brand-yellow focus:bg-white/10;
+    @apply w-full px-3.5 py-2.5 rounded-xl
+           border border-ink-4 bg-ink-5
+           text-sm text-ink-1 placeholder-ink-3
+           transition duration-200 outline-none
+           focus:border-brand-yellow/50 focus:bg-ink-5
+           focus:ring-2 focus:ring-brand-yellow/15;
   }
 
-  /* ── Buttons ── */
+  /* ─── Buttons ─── */
   .btn-primary {
-    @apply w-full py-3.5 px-6 rounded-xl bg-brand-yellow text-brand-dark font-semibold text-sm
-           transition duration-200 ease-smooth
-           hover:brightness-105 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-brand-yellow/40;
-  }
-
-  .btn-ghost {
-    @apply py-3 px-6 rounded-xl border border-brand-border text-brand-dark font-medium text-sm
-           transition duration-200 ease-smooth
-           hover:bg-brand-surface active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-xl
+           bg-brand-yellow text-brand-dark font-semibold text-sm
+           transition duration-200
+           hover:brightness-110 active:scale-[0.97]
+           focus:outline-none focus:ring-2 focus:ring-brand-yellow/40;
   }
 
   .btn-ghost-dark {
-    @apply w-full py-3.5 px-6 rounded-xl border border-white/15 text-white/60 font-medium text-sm
-           transition duration-200 ease-smooth
-           hover:border-white/35 hover:text-white active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2
+           px-5 py-2.5 rounded-xl
+           border border-ink-4 text-ink-2 font-medium text-sm
+           transition duration-200
+           hover:border-ink-4 hover:text-ink-1 hover:bg-ink-5
+           active:scale-[0.97];
   }
 
-  /* ── Cards ── */
-  .card {
-    @apply bg-white rounded-2xl shadow-card border border-brand-border;
-  }
-
-  .card-dark {
-    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md;
-  }
-
-  /* ── Labels ── */
-  .form-label {
-    @apply block text-xs font-semibold text-brand-muted uppercase tracking-wider mb-1.5;
-  }
-
+  /* ─── Labels ─── */
   .form-label-dark {
-    @apply block text-xs font-semibold text-white/40 uppercase tracking-wider mb-1.5;
+    @apply block text-[10px] font-semibold text-ink-3
+           uppercase tracking-[0.08em] mb-2;
+  }
+
+  /* ─── Sidebar nav button ─── */
+  .nav-btn {
+    @apply w-full flex items-center gap-2.5 px-3 py-2 rounded-lg
+           text-xs font-medium text-ink-3 transition duration-150
+           hover:text-ink-1 hover:bg-ink-5;
+  }
+
+  .nav-btn-active {
+    @apply text-ink-1 bg-ink-5;
+  }
+
+  /* ─── Task card ─── */
+  .task-card {
+    @apply rounded-xl border border-ink-4 bg-ink-5
+           px-4 py-3.5 transition duration-150
+           hover:border-white/10 hover:bg-ink-5
+           backdrop-blur-sm;
+  }
+
+  .task-card-urgent {
+    @apply border-amber-400/20 bg-amber-400/[0.03]
+           hover:bg-amber-400/[0.05];
+  }
+
+  .task-card-overdue {
+    @apply border-red-400/20 bg-red-400/[0.03]
+           hover:bg-red-400/[0.05];
+  }
+
+  .task-card-done {
+    @apply opacity-40 border-ink-4 bg-ink-6;
+  }
+
+  /* ─── Badge ─── */
+  .badge {
+    @apply inline-flex items-center gap-1
+           px-2 py-0.5 rounded-md
+           text-[10px] font-semibold tracking-wide;
+  }
+
+  /* ─── Kbd ─── */
+  kbd {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded
+           border border-white/10 bg-ink-5
+           text-[10px] font-mono font-semibold text-ink-3 leading-none;
+  }
+
+  /* ─── Divider ─── */
+  .divider {
+    @apply border-t border-ink-4;
   }
 }

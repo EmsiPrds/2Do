@@ -4,29 +4,48 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       colors: {
         brand: {
-          dark: "#000000",
-          yellow: "#FDCE00",
-          light: "#EFEFEF",
-          muted: "#6B6B6B",
+          dark:    "#080808",   // true editorial black
+          yellow:  "#FDCE00",   // accent stays
+          light:   "#EFEFEF",
+          muted:   "#6B6B6B",
           surface: "#F7F7F7",
-          border: "#E4E4E4",
+          border:  "#E4E4E4",
+        },
+        ink: {
+          1: "rgba(255,255,255,0.92)",   // primary text
+          2: "rgba(255,255,255,0.55)",   // secondary text
+          3: "rgba(255,255,255,0.30)",   // tertiary / labels
+          4: "rgba(255,255,255,0.12)",   // subtle borders
+          5: "rgba(255,255,255,0.05)",   // card surfaces
+          6: "rgba(255,255,255,0.03)",   // dimmed surfaces
         },
       },
       boxShadow: {
-        card: "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)",
-        "card-hover": "0 4px 20px rgba(0,0,0,0.12)",
-        "input-focus": "0 0 0 3px rgba(253,206,0,0.25)",
+        card:        "0 1px 2px rgba(0,0,0,0.20), 0 0 0 1px rgba(255,255,255,0.05)",
+        "card-lift": "0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08)",
+        "glow-y":    "0 0 40px rgba(253,206,0,0.08)",
+        "input-focus": "0 0 0 3px rgba(253,206,0,0.20)",
       },
       borderRadius: {
-        xl: "1rem",
+        DEFAULT: "0.5rem",
+        lg:  "0.75rem",
+        xl:  "1rem",
         "2xl": "1.25rem",
+        "3xl": "1.5rem",
       },
       transitionTimingFunction: {
         smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      spacing: {
+        "px": "1px",
+        "0.5": "2px",
+        "sidebar": "17rem",
       },
     },
   },

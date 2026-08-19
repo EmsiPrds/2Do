@@ -1,13 +1,14 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
 import Task from "../models/Task.js";
+import { updateStreakForUser } from "./userRoutes.js";
 
 const router = express.Router();
 
 // 📌 Create Task (POST)
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { title, description, dueDate, priority } = req.body;
+    const { title, description, dueDate, priority, status } = req.body;
 
     if (!title || title.trim() === "") {
       return res.status(400).json({ message: "Task title is required." });
@@ -20,12 +21,16 @@ router.post("/", authMiddleware, async (req, res) => {
     const validPriorities = ["low", "medium", "high"];
     const resolvedPriority = validPriorities.includes(priority) ? priority : "medium";
 
+    const validStatuses = ["todo", "in-progress", "done"];
+    const resolvedStatus = validStatuses.includes(status) ? status : "todo";
+
     const newTask = new Task({
       user: req.user.id,
       title: title.trim(),
       description,
       dueDate,
       priority: resolvedPriority,
+      status: resolvedStatus,
     });
 
     await newTask.save();
@@ -39,6 +44,7 @@ router.post("/", authMiddleware, async (req, res) => {
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user.id }).sort({
+      order: 1,
       createdAt: -1,
     });
     res.json(tasks);
@@ -50,7 +56,7 @@ router.get("/", authMiddleware, async (req, res) => {
 // 📌 Update Task (PUT)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { title, description, dueDate, completed, priority } = req.body;
+    const { title, description, dueDate, completed, priority, focusToday, status } = req.body;
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
 
     if (!task) return res.status(404).json({ message: "Task not found." });
@@ -68,7 +74,32 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (completed !== undefined) {
       task.completed = completed;
       task.completedAt = completed ? new Date() : null;
+      // Update streak when a task is being marked complete
+      if (completed) {
+        updateStreakForUser(req.user.id).catch((err) =>
+          console.error("Streak update failed:", err)
+        );
+      }
     }
+
+    // ✅ Handle kanban status — keep completed flag in sync
+    const validStatuses = ["todo", "in-progress", "done"];
+    if (status !== undefined && validStatuses.includes(status)) {
+      task.status = status;
+      // Moving to "done" column marks complete; moving out resets it
+      if (status === "done" && !task.completed) {
+        task.completed = true;
+        task.completedAt = new Date();
+        updateStreakForUser(req.user.id).catch((err) =>
+          console.error("Streak update failed:", err)
+        );
+      } else if (status !== "done" && task.completed) {
+        task.completed = false;
+        task.completedAt = null;
+      }
+    }
+
+    if (focusToday !== undefined) task.focusToday = focusToday;
 
     await task.save();
     res.json(task);
@@ -139,6 +170,29 @@ router.delete("/:id/subtasks/:subtaskId", authMiddleware, async (req, res) => {
     task.subtasks.pull({ _id: req.params.subtaskId });
     await task.save();
     res.json(task);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 📌 Reorder Tasks (PATCH /tasks/reorder)
+// Body: { orderedIds: ["id1", "id2", ...] }
+router.patch("/reorder", authMiddleware, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return res.status(400).json({ message: "orderedIds must be a non-empty array." });
+    }
+
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id, user: req.user.id },
+        update: { $set: { order: index } },
+      },
+    }));
+
+    await Task.bulkWrite(bulkOps);
+    res.json({ message: "Order saved." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
