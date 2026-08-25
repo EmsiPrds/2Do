@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -17,12 +18,23 @@ export default {
           border:  "#E4E4E4",
         },
         ink: {
-          1: "rgba(255,255,255,0.92)",   // primary text
+          1: "rgba(255,255,255,0.92)",   // primary text  (dark mode)
           2: "rgba(255,255,255,0.55)",   // secondary text
           3: "rgba(255,255,255,0.30)",   // tertiary / labels
           4: "rgba(255,255,255,0.12)",   // subtle borders
           5: "rgba(255,255,255,0.05)",   // card surfaces
           6: "rgba(255,255,255,0.03)",   // dimmed surfaces
+        },
+        // Light-mode semantic palette
+        lm: {
+          bg:       "#F8F8F8",
+          surface:  "#FFFFFF",
+          surface2: "#F2F2F2",
+          border:   "rgba(0,0,0,0.08)",
+          border2:  "rgba(0,0,0,0.12)",
+          text1:    "rgba(0,0,0,0.88)",
+          text2:    "rgba(0,0,0,0.50)",
+          text3:    "rgba(0,0,0,0.32)",
         },
       },
       boxShadow: {

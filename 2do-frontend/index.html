@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>2Do App</title>
+    <!-- Prevent flash of wrong theme -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem("theme");
+        var isDark = stored ? stored === "dark" : true;
+        if (isDark) {
+          document.documentElement.classList.add("dark");
+          document.documentElement.style.backgroundColor = "#080808";
+          document.documentElement.style.colorScheme = "dark";
+        } else {
+          document.documentElement.style.backgroundColor = "#F8F8F8";
+          document.documentElement.style.colorScheme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

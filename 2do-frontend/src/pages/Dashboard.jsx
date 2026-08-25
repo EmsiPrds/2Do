@@ -19,6 +19,7 @@ import {
 import Logo from "../assets/svg";
 import QuickAdd from "../components/QuickAdd";
 import Subtasks from "../components/Subtasks";
+import ThemeToggle from "../components/ThemeToggle";
 
 /* ─── Priority config ─── */
 const PRIORITIES = {
@@ -32,7 +33,7 @@ const PRIORITY_BORDER = {
   low:    "border-l-emerald-400/30",
 };
 const KANBAN_COLUMNS = [
-  { id: "todo",        label: "To do",       accent: "border-white/10",          dot: "bg-white/25",     count_color: "text-white/30"     },
+  { id: "todo",        label: "To do",       accent: "border-black/10 dark:border-white/10", dot: "bg-black/25 dark:bg-white/25", count_color: "text-lm-text3 dark:text-white/30" },
   { id: "in-progress", label: "In progress", accent: "border-amber-400/30",      dot: "bg-amber-400",    count_color: "text-amber-400"    },
   { id: "done",        label: "Done",        accent: "border-emerald-400/30",    dot: "bg-emerald-400",  count_color: "text-emerald-400"  },
 ];
@@ -50,10 +51,11 @@ function PriorityPicker({ value, onChange }) {
         <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border border-white/8 bg-[#111] shadow-2xl overflow-hidden min-w-[130px]">
+        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border shadow-2xl overflow-hidden min-w-[130px]
+                        border-black/10 bg-white dark:border-white/8 dark:bg-[#111]">
           {Object.entries(PRIORITIES).map(([k, c]) => (
             <button key={k} type="button" onClick={() => { onChange(k); setOpen(false); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition duration-100 ${value === k ? `${c.bg} ${c.color}` : "text-white/50 hover:bg-white/6 hover:text-white"}`}>
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition duration-100 ${value === k ? `${c.bg} ${c.color}` : "text-lm-text2 dark:text-white/50 hover:bg-black/5 dark:hover:bg-white/6 hover:text-lm-text1 dark:hover:text-white"}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
               {c.label}
               {value === k && <Check className="w-3 h-3 ml-auto" />}
@@ -79,7 +81,7 @@ function PriorityBadge({ priority }) {
 function Avatar({ avatarUrl, username, onClick }) {
   if (avatarUrl) return (
     <img src={`http://localhost:5000${avatarUrl}`} alt="Avatar" onClick={onClick}
-      className="w-8 h-8 rounded-full object-cover cursor-pointer ring-1 ring-white/20 hover:ring-brand-yellow/60 transition" />
+      className="w-8 h-8 rounded-full object-cover cursor-pointer ring-1 ring-black/10 dark:ring-white/20 hover:ring-brand-yellow/60 transition" />
   );
   return (
     <button onClick={onClick} aria-label="Profile"
@@ -94,8 +96,8 @@ function StatTile({ label, value, accent, sub }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className={`text-2xl font-semibold tracking-tight tabular-nums ${accent}`}>{value}</span>
-      <span className="text-[10px] font-medium text-white/35 uppercase tracking-[0.07em]">{label}</span>
-      {sub && <span className="text-[10px] text-white/20 mt-0.5">{sub}</span>}
+      <span className="text-[10px] font-medium text-lm-text3 dark:text-white/35 uppercase tracking-[0.07em]">{label}</span>
+      {sub && <span className="text-[10px] text-lm-text3 dark:text-white/20 mt-0.5">{sub}</span>}
     </div>
   );
 }
@@ -114,11 +116,12 @@ function StreakBadge({ streak, longestStreak }) {
         <Flame className="w-3 h-3" />{streak}
       </button>
       {tip && (
-        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap rounded-xl border border-white/8 bg-[#111] px-3 py-2.5 shadow-2xl text-xs pointer-events-none">
-          <p className="font-semibold text-white">{streak}-day streak</p>
-          {longestStreak > 0 && <p className="text-white/35 mt-0.5">Best: {longestStreak} days</p>}
-          <p className="text-white/25 mt-0.5">Complete a task daily to keep it alive</p>
-          <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#111] border-l border-t border-white/8" />
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap rounded-xl shadow-2xl text-xs pointer-events-none
+                        border border-black/10 bg-white dark:border-white/8 dark:bg-[#111] px-3 py-2.5">
+          <p className="font-semibold text-lm-text1 dark:text-white">{streak}-day streak</p>
+          {longestStreak > 0 && <p className="text-lm-text2 dark:text-white/35 mt-0.5">Best: {longestStreak} days</p>}
+          <p className="text-lm-text3 dark:text-white/25 mt-0.5">Complete a task daily to keep it alive</p>
+          <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-l border-t bg-white dark:bg-[#111] border-black/10 dark:border-white/8" />
         </div>
       )}
     </div>
@@ -132,15 +135,18 @@ function ShortcutHint() {
   return (
     <div className="relative">
       <button onClick={() => setOpen(p => !p)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}
-        className="p-1.5 text-white/20 hover:text-white/50 rounded-lg hover:bg-white/5 transition" aria-label="Shortcuts">
+        className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/20 hover:text-lm-text1 dark:hover:text-white/50 hover:bg-black/5 dark:hover:bg-white/5" aria-label="Shortcuts">
         <Keyboard className="w-3.5 h-3.5" />
       </button>
       {open && (
-        <div className="absolute top-full right-0 mt-2 z-50 w-48 rounded-xl border border-white/8 bg-[#111] shadow-2xl p-3 space-y-1" onMouseDown={e => e.preventDefault()}>
-          <p className="text-[9px] font-semibold text-white/25 uppercase tracking-widest px-1 pb-1.5">Shortcuts</p>
+        <div className="absolute top-full right-0 mt-2 z-50 w-48 rounded-xl shadow-2xl p-3 space-y-1
+                        border border-black/10 bg-white dark:border-white/8 dark:bg-[#111]"
+             onMouseDown={e => e.preventDefault()}>
+          <p className="text-[9px] font-semibold uppercase tracking-widest px-1 pb-1.5
+                        text-lm-text3 dark:text-white/25">Shortcuts</p>
           {KEYS.map(({ key, desc }) => (
             <div key={key} className="flex items-center justify-between px-1 py-1">
-              <span className="text-xs text-white/45">{desc}</span>
+              <span className="text-xs text-lm-text2 dark:text-white/45">{desc}</span>
               <kbd>{key}</kbd>
             </div>
           ))}
@@ -164,14 +170,14 @@ function KanbanColumn({ column, tasks, children }) {
     <div className="flex flex-col min-w-0 flex-1 min-w-[200px]">
       <div className={`flex items-center gap-2 mb-4 pb-3 border-b ${column.accent}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${column.dot}`} />
-        <span className="text-[10px] font-semibold text-white/50 uppercase tracking-[0.1em]">{column.label}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-lm-text2 dark:text-white/50">{column.label}</span>
         <span className={`ml-auto text-xs font-semibold tabular-nums ${column.count_color}`}>{tasks.length}</span>
       </div>
-      <div ref={setNodeRef} className={`flex-1 rounded-xl min-h-[180px] p-1.5 space-y-2 transition-colors duration-100 ${isOver ? "bg-white/[0.03] ring-1 ring-white/8" : ""}`}>
+      <div ref={setNodeRef} className={`flex-1 rounded-xl min-h-[180px] p-1.5 space-y-2 transition-colors duration-100 ${isOver ? "bg-black/[0.03] dark:bg-white/[0.03] ring-1 ring-black/8 dark:ring-white/8" : ""}`}>
         {children}
         {tasks.length === 0 && !isOver && (
-          <div className="flex items-center justify-center h-20 rounded-lg border border-dashed border-white/6">
-            <p className="text-[10px] text-white/15 font-medium">Drop here</p>
+          <div className="flex items-center justify-center h-20 rounded-lg border border-dashed border-black/10 dark:border-white/6">
+            <p className="text-[10px] font-medium text-lm-text3 dark:text-white/15">Drop here</p>
           </div>
         )}
       </div>
@@ -192,10 +198,10 @@ function KanbanCard({ task, onEdit, onDelete, onToggleFocus }) {
   const style = transform ? { transform: `translate3d(${transform.x}px,${transform.y}px,0)` } : undefined;
   return (
     <div ref={setNodeRef} style={style}
-      className={`rounded-xl border px-3 py-2.5 space-y-2 select-none transition duration-100 ${isDragging ? "opacity-30 shadow-card-lift" : ""} ${task.completed ? "border-white/5 bg-white/[0.02] opacity-45" : overdue ? "border-red-400/15 bg-red-400/[0.03] hover:bg-red-400/[0.05]" : dueSoon ? "border-amber-400/15 bg-amber-400/[0.03] hover:bg-amber-400/[0.05]" : "border-white/7 bg-ink-5 hover:border-white/12 hover:bg-white/[0.06]"}`}>
+      className={`rounded-xl border px-3 py-2.5 space-y-2 select-none transition duration-100 ${isDragging ? "opacity-30 shadow-card-lift" : ""} ${task.completed ? "border-black/8 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] opacity-45" : overdue ? "border-red-400/15 bg-red-400/[0.03] hover:bg-red-400/[0.05]" : dueSoon ? "border-amber-400/15 bg-amber-400/[0.03] hover:bg-amber-400/[0.05]" : "border-black/8 dark:border-white/7 bg-white dark:bg-ink-5 hover:border-black/15 dark:hover:border-white/12 hover:bg-lm-surface2 dark:hover:bg-white/[0.06]"}`}>
       <div className="flex items-start gap-2">
-        <button {...listeners} {...attributes} className="mt-0.5 shrink-0 text-white/15 hover:text-white/40 cursor-grab active:cursor-grabbing touch-none transition" tabIndex={-1}><GripVertical className="w-3.5 h-3.5" /></button>
-        <span className={`flex-1 text-xs font-medium leading-snug ${task.completed ? "line-through text-white/25" : "text-white/85"}`}>{task.title}</span>
+        <button {...listeners} {...attributes} className="mt-0.5 shrink-0 text-lm-text3 dark:text-white/15 hover:text-lm-text2 dark:hover:text-white/40 cursor-grab active:cursor-grabbing touch-none transition" tabIndex={-1}><GripVertical className="w-3.5 h-3.5" /></button>
+        <span className={`flex-1 text-xs font-medium leading-snug ${task.completed ? "line-through text-lm-text3 dark:text-white/25" : "text-lm-text1 dark:text-white/85"}`}>{task.title}</span>
       </div>
       <div className="flex items-center justify-between pl-5">
         <div className="flex flex-wrap gap-1">
@@ -205,14 +211,14 @@ function KanbanCard({ task, onEdit, onDelete, onToggleFocus }) {
           {task.focusToday && <span className="badge bg-brand-yellow/10 text-brand-yellow"><Sun className="w-2.5 h-2.5"/>Today</span>}
         </div>
         <div className="flex items-center gap-0.5 ml-2 shrink-0">
-          <button onClick={() => onToggleFocus(task)} className={`p-1 rounded transition ${task.focusToday ? "text-brand-yellow" : "text-white/15 hover:text-brand-yellow/60"}`}><Sun className="w-3 h-3"/></button>
-          <button onClick={() => onEdit(task)} className="p-1 rounded text-white/15 hover:text-white/70 transition"><Pencil className="w-3 h-3"/></button>
-          <button onClick={() => onDelete(task._id)} className="p-1 rounded text-white/15 hover:text-red-400 transition"><Trash2 className="w-3 h-3"/></button>
+          <button onClick={() => onToggleFocus(task)} className={`p-1 rounded transition ${task.focusToday ? "text-brand-yellow" : "text-lm-text3 dark:text-white/15 hover:text-brand-yellow/60"}`}><Sun className="w-3 h-3"/></button>
+          <button onClick={() => onEdit(task)} className="p-1 rounded transition text-lm-text3 dark:text-white/15 hover:text-lm-text1 dark:hover:text-white/70"><Pencil className="w-3 h-3"/></button>
+          <button onClick={() => onDelete(task._id)} className="p-1 rounded transition text-lm-text3 dark:text-white/15 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
         </div>
       </div>
       {task.dueDate && (
         <div className="pl-5">
-          <span className={`flex items-center gap-1 text-[10px] ${overdue ? "text-red-400/60" : dueSoon ? "text-amber-400/60" : "text-white/20"}`}>
+          <span className={`flex items-center gap-1 text-[10px] ${overdue ? "text-red-400/60" : dueSoon ? "text-amber-400/60" : "text-lm-text3 dark:text-white/20"}`}>
             <Calendar className="w-2.5 h-2.5"/>{new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
           </span>
         </div>
@@ -415,14 +421,15 @@ export default function Dashboard() {
      RENDER
   ════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen bg-brand-dark text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-lm-bg dark:bg-brand-dark text-lm-text1 dark:text-white overflow-x-hidden transition-colors duration-300">
 
       {/* Ambient glow */}
       <div className="pointer-events-none fixed inset-0 z-0"
-        style={{ background: "radial-gradient(ellipse 80% 40% at 50% -10%, rgba(253,206,0,0.055) 0%, transparent 70%)" }} />
+        style={{ background: "radial-gradient(ellipse 80% 40% at 50% -10%, rgba(253,206,0,0.04) 0%, transparent 70%)" }} />
 
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-brand-dark/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b backdrop-blur-xl
+                         border-black/[0.07] bg-lm-bg/85 dark:border-white/[0.06] dark:bg-brand-dark/85">
         <div className="max-w-screen-xl mx-auto px-6 sm:px-10 h-12 flex items-center justify-between gap-4">
 
           {/* Left */}
@@ -440,8 +447,10 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <StreakBadge streak={streak} longestStreak={longestStreak} />
             <ShortcutHint />
+            <ThemeToggle />
             <Avatar avatarUrl={avatarUrl} username={username} onClick={() => setShowProfileModal(true)} />
-            <button onClick={handleLogout} className="p-1.5 text-white/25 hover:text-white/60 rounded-lg hover:bg-white/5 transition" aria-label="Logout">
+            <button onClick={handleLogout} className="p-1.5 rounded-lg transition
+                                                       text-lm-text3 dark:text-white/25 hover:text-lm-text1 dark:hover:text-white/60 hover:bg-black/5 dark:hover:bg-white/5" aria-label="Logout">
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -450,20 +459,22 @@ export default function Dashboard() {
 
       {/* ── PROFILE MODAL ── */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center" onClick={() => setShowProfileModal(false)}>
-          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 space-y-5 bg-[#0e0e0e] border border-white/8 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center sm:items-center" onClick={() => setShowProfileModal(false)}>
+          <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 space-y-5 shadow-2xl border
+                          bg-white border-black/10 dark:bg-[#0e0e0e] dark:border-white/8"
+               onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">Profile</h2>
-              <button onClick={() => setShowProfileModal(false)} className="text-white/30 hover:text-white transition"><X className="w-4 h-4" /></button>
+              <h2 className="text-sm font-semibold text-lm-text1 dark:text-white">Profile</h2>
+              <button onClick={() => setShowProfileModal(false)} className="transition text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white"><X className="w-4 h-4" /></button>
             </div>
             <div className="flex items-center gap-3">
               <Avatar avatarUrl={avatarUrl} username={username} onClick={() => {}} />
-              <span className="text-sm font-medium text-white">{username}</span>
+              <span className="text-sm font-medium text-lm-text1 dark:text-white">{username}</span>
             </div>
             <div>
               <label className="form-label-dark">Change avatar</label>
               <input type="file" accept="image/*" onChange={handleAvatarUpload}
-                className="block w-full text-xs text-white/35 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-white/8 file:text-white/60 file:text-xs file:font-medium hover:file:bg-white/12 transition cursor-pointer" />
+                className="block w-full text-xs text-lm-text2 dark:text-white/35 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-black/6 dark:file:bg-white/8 file:text-lm-text1 dark:file:text-white/60 file:text-xs file:font-medium hover:file:bg-black/10 dark:hover:file:bg-white/12 transition cursor-pointer" />
             </div>
           </div>
         </div>
@@ -477,28 +488,29 @@ export default function Dashboard() {
           <aside className="w-full lg:w-56 xl:w-64 shrink-0 lg:sticky lg:top-20 lg:self-start space-y-6">
 
             {/* Metrics */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-5 space-y-5">
+            <div className="rounded-2xl border px-5 py-5 space-y-5
+                            border-black/[0.07] bg-black/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02]">
               <div className="flex lg:flex-col gap-5 lg:gap-5 justify-between">
-                <StatTile label="Total"   value={total}   accent="text-white/90" />
-                <StatTile label="Done"    value={done}    accent="text-emerald-400" />
-                <StatTile label="Pending" value={pending} accent="text-brand-yellow" />
+                <StatTile label="Total"   value={total}   accent="text-lm-text1 dark:text-white/90" />
+                <StatTile label="Done"    value={done}    accent="text-emerald-500 dark:text-emerald-400" />
+                <StatTile label="Pending" value={pending} accent="text-amber-500 dark:text-brand-yellow" />
               </div>
               {total > 0 && (
-                <div className="space-y-1.5 pt-1 border-t border-white/[0.05]">
+                <div className="space-y-1.5 pt-1 border-t border-black/[0.06] dark:border-white/[0.05]">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-medium text-white/25 uppercase tracking-widest">Progress</span>
-                    <span className="text-[10px] font-semibold text-brand-yellow tabular-nums">{progress}%</span>
+                    <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/25">Progress</span>
+                    <span className="text-[10px] font-semibold tabular-nums text-amber-500 dark:text-brand-yellow">{progress}%</span>
                   </div>
-                  <div className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+                  <div className="h-[3px] rounded-full bg-black/[0.07] dark:bg-white/[0.07] overflow-hidden">
                     <div className="h-full rounded-full bg-brand-yellow transition-all duration-700" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               )}
               {streak > 0 && (
-                <div className="flex items-center justify-between pt-1 border-t border-white/[0.05]">
+                <div className="flex items-center justify-between pt-1 border-t border-black/[0.06] dark:border-white/[0.05]">
                   <div className="flex items-center gap-1.5">
                     <Flame className={`w-3.5 h-3.5 ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`} />
-                    <span className="text-[10px] font-medium text-white/35 uppercase tracking-widest">Streak</span>
+                    <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/35">Streak</span>
                   </div>
                   <span className={`text-sm font-semibold tabular-nums ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`}>{streak}d</span>
                 </div>
@@ -515,7 +527,7 @@ export default function Dashboard() {
                   {[["all","All tasks"],["pending","Pending"],["completed","Completed"]].map(([v,l]) => (
                     <button key={v} onClick={() => setFilter(v)}
                       className={`nav-btn ${filter === v ? "nav-btn-active" : ""}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${v === "all" ? "bg-white/30" : v === "pending" ? "bg-brand-yellow" : "bg-emerald-400"}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${v === "all" ? "bg-black/30 dark:bg-white/30" : v === "pending" ? "bg-brand-yellow" : "bg-emerald-400"}`} />
                       {l}
                     </button>
                   ))}
@@ -524,7 +536,7 @@ export default function Dashboard() {
                 {/* Priority */}
                 <div className="space-y-1">
                   <p className="form-label-dark">Priority</p>
-                  {[["all","All","bg-white/20"],["high","High","bg-red-400"],["medium","Medium","bg-amber-400"],["low","Low","bg-emerald-400"]].map(([v,l,dot]) => (
+                  {[["all","All","bg-black/20 dark:bg-white/20"],["high","High","bg-red-400"],["medium","Medium","bg-amber-400"],["low","Low","bg-emerald-400"]].map(([v,l,dot]) => (
                     <button key={v} onClick={() => setPriorityFilter(v)}
                       className={`nav-btn ${priorityFilter === v ? "nav-btn-active" : ""}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{l}
@@ -552,13 +564,15 @@ export default function Dashboard() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
 
               {/* View tabs */}
-              <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+              <div className="flex items-center gap-0.5 p-0.5 rounded-xl border
+                              bg-black/[0.04] border-black/[0.07]
+                              dark:bg-white/[0.04] dark:border-white/[0.06]">
                 <button onClick={() => setViewMode("all")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${viewMode === "all" ? "bg-white/8 text-white" : "text-white/35 hover:text-white/60"}`}>
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${viewMode === "all" ? "bg-black/8 text-lm-text1 dark:bg-white/8 dark:text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
                   All
                 </button>
                 <button onClick={() => setViewMode("today")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${viewMode === "today" ? "bg-brand-yellow text-brand-dark" : "text-white/35 hover:text-white/60"}`}>
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${viewMode === "today" ? "bg-brand-yellow text-brand-dark" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
                   <Sun className="w-3 h-3" />Today
                   {todayCount > 0 && (
                     <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold ${viewMode === "today" ? "bg-black/20 text-brand-dark" : "bg-brand-yellow/20 text-brand-yellow"}`}>{todayCount}</span>
@@ -570,14 +584,16 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 {viewMode === "all" && layoutMode === "list" && (
                   <button onClick={() => setShowSort(!showSort)}
-                    className={`lg:hidden flex items-center gap-1.5 text-xs font-medium transition ${showSort ? "text-brand-yellow" : "text-white/30 hover:text-white"}`}>
+                    className={`lg:hidden flex items-center gap-1.5 text-xs font-medium transition ${showSort ? "text-brand-yellow" : "text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white"}`}>
                     <SlidersHorizontal className="w-3.5 h-3.5" />Sort
                   </button>
                 )}
-                <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <div className="flex items-center gap-0.5 p-0.5 rounded-xl border
+                                bg-black/[0.04] border-black/[0.07]
+                                dark:bg-white/[0.04] dark:border-white/[0.06]">
                   {[["list", <LayoutList className="w-3.5 h-3.5" key="ll"/>],["kanban", <Columns2 className="w-3.5 h-3.5" key="c2"/>]].map(([m, icon]) => (
                     <button key={m} onClick={() => setLayoutMode(m)} aria-label={`${m} view`}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${layoutMode === m ? "bg-white/8 text-white" : "text-white/30 hover:text-white/55"}`}>
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${layoutMode === m ? "bg-black/8 text-lm-text1 dark:bg-white/8 dark:text-white" : "text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white/55"}`}>
                       {icon}{m.charAt(0).toUpperCase() + m.slice(1)}
                     </button>
                   ))}
@@ -587,7 +603,9 @@ export default function Dashboard() {
 
             {/* Mobile sort panel */}
             {viewMode === "all" && layoutMode === "list" && showSort && (
-              <div className="lg:hidden rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+              <div className="lg:hidden rounded-xl border px-4 py-3
+                              border-black/[0.07] bg-black/[0.02]
+                              dark:border-white/[0.06] dark:bg-white/[0.02]">
                 <label className="form-label-dark">Sort by</label>
                 <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="input-dark text-xs py-2">
                   {SORT_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
@@ -599,15 +617,15 @@ export default function Dashboard() {
             {viewMode === "today" && (
               <div className="flex items-center justify-between px-0.5">
                 <div>
-                  <p className="text-sm font-semibold text-white/85">
+                  <p className="text-sm font-semibold text-lm-text1 dark:text-white/85">
                     {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
-                  <p className="text-xs text-white/25 mt-0.5">
+                  <p className="text-xs mt-0.5 text-lm-text3 dark:text-white/25">
                     {filteredTasks.length === 0 ? "Nothing on your plate" : `${filteredTasks.length} task${filteredTasks.length !== 1 ? "s" : ""} to tackle`}
                   </p>
                 </div>
                 {filteredTasks.length > 0 && (
-                  <span className="text-xs text-white/20 tabular-nums">{filteredTasks.filter(t => t.completed).length}/{filteredTasks.length}</span>
+                  <span className="text-xs tabular-nums text-lm-text3 dark:text-white/20">{filteredTasks.filter(t => t.completed).length}/{filteredTasks.length}</span>
                 )}
               </div>
             )}
@@ -617,10 +635,11 @@ export default function Dashboard() {
 
             {/* ── Add form ── */}
             {showAddForm ? (
-              <div className="rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-5 space-y-4 shadow-card-lift">
+              <div className="rounded-2xl border p-5 space-y-4 shadow-card-lift
+                              border-black/[0.08] bg-white dark:border-white/[0.07] dark:bg-[#0d0d0d]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white/70 uppercase tracking-[0.07em]">New task</span>
-                  <button onClick={() => setShowAddForm(false)} className="text-white/25 hover:text-white transition"><X className="w-4 h-4" /></button>
+                  <span className="text-xs font-semibold uppercase tracking-[0.07em] text-lm-text2 dark:text-white/70">New task</span>
+                  <button onClick={() => setShowAddForm(false)} className="transition text-lm-text3 dark:text-white/25 hover:text-lm-text1 dark:hover:text-white"><X className="w-4 h-4" /></button>
                 </div>
                 <form onSubmit={handleAddTask} className="space-y-4">
                   <div>
@@ -633,12 +652,12 @@ export default function Dashboard() {
                       <PriorityPicker value={priority} onChange={setPriority} />
                     </div>
                     <div>
-                      <label className="form-label-dark">Due date <span className="normal-case font-normal text-white/20">(optional)</span></label>
+                      <label className="form-label-dark">Due date <span className="normal-case font-normal text-lm-text3 dark:text-white/20">(optional)</span></label>
                       <input type="date" className="input-dark" value={dueDate} onChange={e => setDueDate(e.target.value)} />
                     </div>
                   </div>
                   <div>
-                    <label className="form-label-dark">Description <span className="normal-case font-normal text-white/20">(optional)</span></label>
+                    <label className="form-label-dark">Description <span className="normal-case font-normal text-lm-text3 dark:text-white/20">(optional)</span></label>
                     <textarea className="input-dark resize-none" placeholder="Add details…" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
                   </div>
                   <div className="flex gap-2.5 pt-1">
@@ -649,7 +668,9 @@ export default function Dashboard() {
               </div>
             ) : (
               <button onClick={() => setShowAddForm(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/[0.08] text-xs text-white/25 hover:border-brand-yellow/40 hover:text-brand-yellow/80 transition duration-200">
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed transition duration-200
+                           border-black/[0.10] text-lm-text3 hover:border-brand-yellow/40 hover:text-brand-yellow/80
+                           dark:border-white/[0.08] dark:text-white/25 dark:hover:border-brand-yellow/40 dark:hover:text-brand-yellow/80">
                 <Plus className="w-3.5 h-3.5" />Add a task
               </button>
             )}
@@ -683,17 +704,17 @@ export default function Dashboard() {
               <div className="flex flex-col items-center justify-center py-24 gap-3">
                 {viewMode === "today" ? (
                   <>
-                    <Sun className="w-7 h-7 text-white/[0.07]" />
-                    <p className="text-xs text-white/20">Nothing flagged for today.</p>
-                    <p className="text-[10px] text-white/12">Click ☀ on any task to add it to your focus.</p>
+                    <Sun className="w-7 h-7 text-lm-border dark:text-white/[0.07]" />
+                    <p className="text-xs text-lm-text3 dark:text-white/20">Nothing flagged for today.</p>
+                    <p className="text-[10px] text-lm-text3 dark:text-white/12">Click ☀ on any task to add it to your focus.</p>
                   </>
                 ) : filter === "all" && total > 0 && pending === 0 ? (
                   <>
                     <div className="w-12 h-12 rounded-full bg-emerald-400/8 border border-emerald-400/15 flex items-center justify-center">
                       <Check className="w-6 h-6 text-emerald-400" strokeWidth={2} />
                     </div>
-                    <p className="text-sm font-medium text-white/70">All done</p>
-                    <p className="text-xs text-white/25">Every task is checked off.</p>
+                    <p className="text-sm font-medium text-lm-text1 dark:text-white/70">All done</p>
+                    <p className="text-xs text-lm-text3 dark:text-white/25">Every task is checked off.</p>
                     {streak > 0 && (
                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-400/8 border border-orange-400/15 text-orange-400 text-xs font-medium">
                         <Flame className="w-3 h-3" />{streak}-day streak
@@ -701,7 +722,7 @@ export default function Dashboard() {
                     )}
                   </>
                 ) : (
-                  <p className="text-xs text-white/20">
+                  <p className="text-xs text-lm-text3 dark:text-white/20">
                     {filter === "completed" ? "No completed tasks yet." : filter === "pending" ? "Nothing pending — nice." : "No tasks yet."}
                   </p>
                 )}
@@ -731,24 +752,24 @@ export default function Dashboard() {
                               style={over && !isDragging ? { boxShadow: "0 0 0 1px rgba(248,113,113,0.12), 0 0 20px rgba(248,113,113,0.06)" }
                                    : soon && !isDragging ? { boxShadow: "0 0 0 1px rgba(251,191,36,0.10), 0 0 20px rgba(251,191,36,0.05)" } : undefined}
                               className={`rounded-xl border px-4 py-3.5 space-y-2.5 transition duration-150 outline-none
-                                focus-visible:ring-1 focus-visible:ring-white/20
+                                focus-visible:ring-1 focus-visible:ring-black/15 dark:focus-visible:ring-white/20
                                 ${isDragging ? "opacity-30 shadow-card-lift" : ""}
-                                ${task.completed ? "border-white/[0.04] bg-white/[0.015] opacity-40"
-                                  : over  ? "border-red-400/12 bg-red-400/[0.025] hover:bg-red-400/[0.04]"
-                                  : soon  ? "border-amber-400/12 bg-amber-400/[0.025] hover:bg-amber-400/[0.04]"
-                                  : "border-white/[0.06] bg-white/[0.025] hover:border-white/[0.10] hover:bg-white/[0.04]"
+                                ${task.completed ? "border-black/[0.05] dark:border-white/[0.04] bg-black/[0.02] dark:bg-white/[0.015] opacity-40"
+                                  : over  ? "border-red-400/15 bg-red-400/[0.025] hover:bg-red-400/[0.04]"
+                                  : soon  ? "border-amber-400/15 bg-amber-400/[0.025] hover:bg-amber-400/[0.04]"
+                                  : "border-black/[0.07] dark:border-white/[0.06] bg-white dark:bg-white/[0.025] hover:border-black/[0.12] dark:hover:border-white/[0.10] hover:bg-lm-surface2 dark:hover:bg-white/[0.04]"
                                 } backdrop-blur-sm`}
                             >
                               {/* Row 1: handle + checkbox + title + actions */}
                               <div className="flex items-center gap-2.5">
                                 {sortOption === "manual" && !isEdit && (
                                   <button {...dragHandleProps} tabIndex={-1} aria-label="Drag"
-                                    className={`shrink-0 touch-none transition ${task.completed ? "text-white/[0.08] cursor-default" : "text-white/[0.15] hover:text-white/40 cursor-grab active:cursor-grabbing"}`}>
+                                    className={`shrink-0 touch-none transition ${task.completed ? "text-lm-border dark:text-white/[0.08] cursor-default" : "text-lm-text3 dark:text-white/[0.15] hover:text-lm-text2 dark:hover:text-white/40 cursor-grab active:cursor-grabbing"}`}>
                                     <GripVertical className="w-3.5 h-3.5" />
                                   </button>
                                 )}
                                 <button onClick={() => !isEdit && toggleTaskCompletion(task._id, task.completed)}
-                                  className={`shrink-0 w-4 h-4 rounded-full border-[1.5px] flex items-center justify-center transition duration-150 ${task.completed ? "bg-emerald-500 border-emerald-500" : "border-white/20 hover:border-emerald-400/60"}`}
+                                  className={`shrink-0 w-4 h-4 rounded-full border-[1.5px] flex items-center justify-center transition duration-150 ${task.completed ? "bg-emerald-500 border-emerald-500" : "border-black/20 dark:border-white/20 hover:border-emerald-400/60"}`}
                                   aria-label={task.completed ? "Mark incomplete" : "Mark complete"}>
                                   {task.completed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                                 </button>
@@ -758,20 +779,20 @@ export default function Dashboard() {
                                       onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleUpdateTask(task._id); } if (e.key === "Escape") { e.preventDefault(); cancelEdit(); } }}
                                       className="input-dark py-1.5 text-sm" autoFocus />
                                   ) : (
-                                    <span className={`text-sm leading-snug break-words ${task.completed ? "line-through text-white/25" : "text-white/85 font-medium"}`}>{task.title}</span>
+                                    <span className={`text-sm leading-snug break-words ${task.completed ? "line-through text-lm-text3 dark:text-white/25" : "text-lm-text1 dark:text-white/85 font-medium"}`}>{task.title}</span>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-0.5 shrink-0">
                                   {isEdit ? (
                                     <>
-                                      <button onClick={() => handleUpdateTask(task._id)} className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-400/8 transition" aria-label="Save"><Check className="w-3.5 h-3.5" /></button>
-                                      <button onClick={cancelEdit} className="p-1.5 rounded-lg text-white/25 hover:text-white hover:bg-white/6 transition" aria-label="Cancel"><RotateCcw className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => handleUpdateTask(task._id)} className="p-1.5 rounded-lg text-emerald-500 dark:text-emerald-400 hover:bg-emerald-400/8 transition" aria-label="Save"><Check className="w-3.5 h-3.5" /></button>
+                                      <button onClick={cancelEdit} className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/25 hover:text-lm-text1 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/6" aria-label="Cancel"><RotateCcw className="w-3.5 h-3.5" /></button>
                                     </>
                                   ) : (
                                     <>
-                                      <button onClick={() => toggleFocusToday(task)} className={`p-1.5 rounded-lg transition ${task.focusToday ? "text-brand-yellow hover:bg-brand-yellow/8" : "text-white/[0.15] hover:text-brand-yellow/60 hover:bg-white/5"}`} title={task.focusToday ? "Remove from today" : "Add to today"}><Sun className="w-3.5 h-3.5" /></button>
-                                      <button onClick={() => startEdit(task)} className="p-1.5 rounded-lg text-white/[0.15] hover:text-white/70 hover:bg-white/5 transition" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                                      <button onClick={() => handleDeleteTask(task._id)} className="p-1.5 rounded-lg text-white/[0.15] hover:text-red-400 hover:bg-red-400/8 transition" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => toggleFocusToday(task)} className={`p-1.5 rounded-lg transition ${task.focusToday ? "text-brand-yellow hover:bg-brand-yellow/8" : "text-lm-text3 dark:text-white/[0.15] hover:text-brand-yellow/60 hover:bg-black/5 dark:hover:bg-white/5"}`} title={task.focusToday ? "Remove from today" : "Add to today"}><Sun className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => startEdit(task)} className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/[0.15] hover:text-lm-text1 dark:hover:text-white/70 hover:bg-black/5 dark:hover:bg-white/5" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => handleDeleteTask(task._id)} className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/[0.15] hover:text-red-400 hover:bg-red-400/8" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                                     </>
                                   )}
                                 </div>
@@ -801,7 +822,7 @@ export default function Dashboard() {
                                 <textarea value={editingDescription} onChange={e => setEditingDescription(e.target.value)} className="input-dark text-sm resize-none pl-7" rows={2} placeholder="Description…" />
                               ) : task.description && (
                                 <div className="pl-7">
-                                  <p className="text-xs text-white/30 leading-relaxed break-words">
+                                  <p className="text-xs leading-relaxed break-words text-lm-text2 dark:text-white/30">
                                     {isExp || task.description.length <= 120 ? task.description : `${task.description.slice(0,120)}…`}
                                   </p>
                                   {task.description.length > 120 && (
@@ -816,12 +837,12 @@ export default function Dashboard() {
                               {(task.dueDate || (task.completed && task.completedAt)) && (
                                 <div className="pl-7 flex flex-wrap gap-3">
                                   {task.dueDate && (
-                                    <span className={`flex items-center gap-1 text-[10px] font-medium ${over ? "text-red-400/70" : soon ? "text-amber-400/70" : isToday(task.dueDate) ? "text-sky-400/60" : "text-white/20"}`}>
+                                    <span className={`flex items-center gap-1 text-[10px] font-medium ${over ? "text-red-400/70" : soon ? "text-amber-400/70" : isToday(task.dueDate) ? "text-sky-400/60" : "text-lm-text3 dark:text-white/20"}`}>
                                       <Calendar className="w-2.5 h-2.5"/>Due {new Date(task.dueDate).toLocaleDateString()}
                                     </span>
                                   )}
                                   {task.completed && task.completedAt && (
-                                    <span className="flex items-center gap-1 text-[10px] text-emerald-400/50">
+                                    <span className="flex items-center gap-1 text-[10px] text-emerald-500/60 dark:text-emerald-400/50">
                                       <Check className="w-2.5 h-2.5"/>Done {new Date(task.completedAt).toLocaleDateString()}
                                     </span>
                                   )}

@@ -4,6 +4,7 @@ import { authRequest } from "../api";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import Logo from "../assets/svg";
 import Threads from "../components/Threads";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,10 +40,10 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen bg-brand-dark text-white overflow-hidden flex flex-col">
+    <div className="relative min-h-screen bg-lm-bg dark:bg-brand-dark text-lm-text1 dark:text-white overflow-hidden flex flex-col transition-colors duration-300">
 
       {/* Background animation */}
-      <div className="fixed inset-0 z-0 opacity-50">
+      <div className="fixed inset-0 z-0 opacity-30 dark:opacity-50">
         <Threads amplitude={3} distance={0} enableMouseInteraction={false} color={[1, 0.8, 0]} />
       </div>
 
@@ -62,13 +63,17 @@ export default function Login() {
           <button onClick={() => navigate("/")} aria-label="Back to home">
             <Logo className="h-auto w-14 sm:w-16 opacity-90 hover:opacity-100 transition" />
           </button>
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition duration-200"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1.5 text-sm transition duration-200
+                         text-lm-text2 dark:text-white/50 hover:text-lm-text1 dark:hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -78,8 +83,8 @@ export default function Login() {
 
           {/* Heading */}
           <div className="mb-8 text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome back</h1>
-            <p className="text-sm text-white/40">Sign in to continue to 2Do.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-lm-text1 dark:text-white">Welcome back</h1>
+            <p className="text-sm text-lm-text2 dark:text-white/40">Sign in to continue to 2Do.</p>
           </div>
 
           {/* Server error */}
@@ -129,7 +134,8 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3.5 -translate-y-1/2 text-white/30 hover:text-white/70 transition"
+                  className="absolute top-1/2 right-3.5 -translate-y-1/2 transition
+                             text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white/70"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -154,7 +160,7 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <p className="mt-6 text-center text-sm text-white/40">
+          <p className="mt-6 text-center text-sm text-lm-text2 dark:text-white/40">
             Don&apos;t have an account?{" "}
             <button
               onClick={() => navigate("/signup")}

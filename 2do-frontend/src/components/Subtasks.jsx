@@ -11,12 +11,12 @@ function SubtaskProgress({ done, total }) {
     <div className="flex items-center gap-2">
       {/* x/y counter */}
       <span className={`text-[11px] font-semibold tabular-nums ${
-        allDone ? "text-emerald-400" : "text-white/50"
+        allDone ? "text-emerald-400" : "text-lm-text2 dark:text-white/50"
       }`}>
         {done}/{total}
       </span>
       {/* bar */}
-      <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+      <div className="flex-1 h-1 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-400 ${
             allDone ? "bg-emerald-400" : "bg-brand-yellow"
@@ -26,7 +26,7 @@ function SubtaskProgress({ done, total }) {
       </div>
       {/* percent */}
       <span className={`text-[11px] font-medium tabular-nums ${
-        allDone ? "text-emerald-400" : "text-white/30"
+        allDone ? "text-emerald-400" : "text-lm-text3 dark:text-white/30"
       }`}>
         {pct}%
       </span>
@@ -102,7 +102,7 @@ export default function Subtasks({ task, onUpdate }) {
             <div className="flex-1">
               <SubtaskProgress done={doneCount} total={subtasks.length} />
             </div>
-            <span className="text-white/25 group-hover:text-white/50 transition">
+            <span className="transition text-lm-text3 dark:text-white/25 group-hover:text-lm-text2 dark:group-hover:text-white/50">
               {expanded
                 ? <ChevronUp className="w-3.5 h-3.5" />
                 : <ChevronDown className="w-3.5 h-3.5" />}
@@ -118,7 +118,7 @@ export default function Subtasks({ task, onUpdate }) {
             <div
               key={sub._id}
               className={`group flex items-center gap-2.5 py-1.5 px-2 rounded-lg transition duration-150
-                          ${loading === sub._id ? "opacity-50 pointer-events-none" : "hover:bg-white/5"}`}
+                          ${loading === sub._id ? "opacity-50 pointer-events-none" : "hover:bg-black/5 dark:hover:bg-white/5"}`}
             >
               {/* Checkbox */}
               <button
@@ -127,7 +127,7 @@ export default function Subtasks({ task, onUpdate }) {
                 className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition duration-150 ${
                   sub.completed
                     ? "bg-emerald-500 border-emerald-500 text-white"
-                    : "border-white/20 hover:border-emerald-400"
+                    : "border-black/20 dark:border-white/20 hover:border-emerald-400"
                 }`}
                 aria-label={sub.completed ? "Mark incomplete" : "Mark complete"}
               >
@@ -136,7 +136,7 @@ export default function Subtasks({ task, onUpdate }) {
 
               {/* Title */}
               <span className={`flex-1 text-xs leading-relaxed break-words ${
-                sub.completed ? "line-through text-white/25" : "text-white/70"
+                sub.completed ? "line-through text-lm-text3 dark:text-white/25" : "text-lm-text2 dark:text-white/70"
               }`}>
                 {sub.title}
               </span>
@@ -145,7 +145,7 @@ export default function Subtasks({ task, onUpdate }) {
               <button
                 type="button"
                 onClick={() => handleDelete(sub._id)}
-                className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition p-0.5"
+                className="opacity-0 group-hover:opacity-100 transition p-0.5 text-lm-text3 dark:text-white/20 hover:text-red-400"
                 aria-label="Delete subtask"
               >
                 <Trash2 className="w-3 h-3" />
@@ -156,7 +156,7 @@ export default function Subtasks({ task, onUpdate }) {
           {/* Add subtask input */}
           {adding ? (
             <form onSubmit={handleAdd} className="flex items-center gap-2 px-2 py-1">
-              <div className="w-4 h-4 shrink-0 rounded border-2 border-white/10" />
+              <div className="w-4 h-4 shrink-0 rounded border-2 border-black/15 dark:border-white/10" />
               <input
                 ref={inputRef}
                 type="text"
@@ -165,7 +165,9 @@ export default function Subtasks({ task, onUpdate }) {
                 onKeyDown={handleKeyDown}
                 onBlur={() => { if (!newTitle.trim()) { setAdding(false); } }}
                 placeholder="Subtask title…"
-                className="flex-1 bg-transparent text-xs text-white placeholder-white/25 outline-none border-b border-white/15 pb-0.5 focus:border-brand-yellow/50 transition"
+                className="flex-1 bg-transparent text-xs outline-none pb-0.5 transition
+                           text-lm-text1 dark:text-white placeholder-lm-text3 dark:placeholder-white/25
+                           border-b border-black/15 dark:border-white/15 focus:border-brand-yellow/50"
               />
               <button
                 type="submit"
@@ -180,8 +182,8 @@ export default function Subtasks({ task, onUpdate }) {
             <button
               type="button"
               onClick={() => { setAdding(true); setExpanded(true); }}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-white/25
-                         hover:text-brand-yellow/70 transition duration-150 rounded-lg hover:bg-white/5"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs transition duration-150 rounded-lg
+                         text-lm-text3 dark:text-white/25 hover:text-brand-yellow/70 hover:bg-black/5 dark:hover:bg-white/5"
             >
               <Plus className="w-3 h-3" />
               Add subtask

@@ -101,14 +101,14 @@ export default function QuickAdd({ onAdd }) {
         <div
           className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-200
                       ${focused
-                        ? "border-brand-yellow/50 bg-white/8 shadow-[0_0_0_3px_rgba(253,206,0,0.08)]"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
+                        ? "border-brand-yellow/50 bg-black/5 dark:bg-white/8 shadow-[0_0_0_3px_rgba(253,206,0,0.08)]"
+                        : "border-black/10 bg-black/[0.03] dark:border-white/10 dark:bg-white/5 hover:border-black/20 dark:hover:border-white/20"
                       }`}
         >
           {/* Icon */}
           <Sparkles
             className={`w-4 h-4 shrink-0 transition-colors duration-200 ${
-              focused ? "text-brand-yellow" : "text-white/25"
+              focused ? "text-brand-yellow" : "text-lm-text3 dark:text-white/25"
             }`}
           />
 
@@ -122,7 +122,8 @@ export default function QuickAdd({ onAdd }) {
             onBlur={() => setFocused(false)}
             onKeyDown={handleKeyDown}
             placeholder='Quick add — try "Fix bug tomorrow" or "Call client Friday 3pm"'
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/25 outline-none min-w-0"
+            className="flex-1 bg-transparent text-sm outline-none min-w-0
+                       text-lm-text1 dark:text-white placeholder-lm-text3 dark:placeholder-white/25"
             aria-label="Quick add task"
           />
 
@@ -131,7 +132,7 @@ export default function QuickAdd({ onAdd }) {
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); reset(); }}
-              className="text-white/25 hover:text-white/60 transition shrink-0"
+              className="transition shrink-0 text-lm-text3 dark:text-white/25 hover:text-lm-text1 dark:hover:text-white/60"
               aria-label="Clear"
             >
               <X className="w-3.5 h-3.5" />
@@ -145,7 +146,7 @@ export default function QuickAdd({ onAdd }) {
             className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200
                         ${value.trim()
                           ? "bg-brand-yellow text-brand-dark hover:brightness-105 active:scale-95"
-                          : "bg-white/5 text-white/20 cursor-not-allowed"
+                          : "bg-black/5 dark:bg-white/5 text-lm-text3 dark:text-white/20 cursor-not-allowed"
                         }`}
             aria-label="Add task"
           >
@@ -159,9 +160,11 @@ export default function QuickAdd({ onAdd }) {
 
             {/* Parsed title */}
             {parsed?.title && parsed.title !== value.trim() && (
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/8 border border-white/10 text-xs text-white/70">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs
+                               bg-black/6 border border-black/10 text-lm-text2
+                               dark:bg-white/8 dark:border-white/10 dark:text-white/70">
                 <Sparkles className="w-3 h-3 text-brand-yellow shrink-0" />
-                <span className="font-medium text-white">{parsed.title}</span>
+                <span className="font-medium text-lm-text1 dark:text-white">{parsed.title}</span>
               </span>
             )}
 
@@ -175,7 +178,7 @@ export default function QuickAdd({ onAdd }) {
 
             {/* Hint when nothing parsed */}
             {!parsed?.hint && !parsed?.date && (
-              <span className="text-xs text-white/25 px-1">
+              <span className="text-xs px-1 text-lm-text3 dark:text-white/25">
                 Press Enter to add · include a date like "tomorrow" or "Friday"
               </span>
             )}
