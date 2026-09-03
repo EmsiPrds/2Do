@@ -10,11 +10,11 @@ export default {
       },
       colors: {
         brand: {
-          dark:    "#080808",   // true editorial black
-          yellow:  "#FDCE00",   // accent stays
-          light:   "#EFEFEF",
+          dark:    "#212121",   // dark background
+          yellow:  "#FDCE00",   // accent
+          light:   "#EFEFEF",   // light background
           muted:   "#6B6B6B",
-          surface: "#F7F7F7",
+          surface: "#EFEFEF",
           border:  "#E4E4E4",
         },
         ink: {
@@ -27,9 +27,9 @@ export default {
         },
         // Light-mode semantic palette
         lm: {
-          bg:       "#F8F8F8",
+          bg:       "#EFEFEF",
           surface:  "#FFFFFF",
-          surface2: "#F2F2F2",
+          surface2: "#E8E8E8",
           border:   "rgba(0,0,0,0.08)",
           border2:  "rgba(0,0,0,0.12)",
           text1:    "rgba(0,0,0,0.88)",

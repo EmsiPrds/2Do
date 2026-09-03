@@ -56,7 +56,7 @@ router.get("/", authMiddleware, async (req, res) => {
 // 📌 Update Task (PUT)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { title, description, dueDate, completed, priority, focusToday, status } = req.body;
+    const { title, description, dueDate, completed, priority, focusToday, status, links } = req.body;
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
 
     if (!task) return res.status(404).json({ message: "Task not found." });
@@ -100,6 +100,13 @@ router.put("/:id", authMiddleware, async (req, res) => {
     }
 
     if (focusToday !== undefined) task.focusToday = focusToday;
+
+    // ✅ Replace entire links array when provided
+    if (links !== undefined && Array.isArray(links)) {
+      task.links = links
+        .filter(l => l.url && l.url.trim())
+        .map(l => ({ url: l.url.trim(), label: (l.label || "").trim() }));
+    }
 
     await task.save();
     res.json(task);
@@ -168,6 +175,45 @@ router.delete("/:id/subtasks/:subtaskId", authMiddleware, async (req, res) => {
     if (!task) return res.status(404).json({ message: "Task not found." });
 
     task.subtasks.pull({ _id: req.params.subtaskId });
+    await task.save();
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ─── Link routes ────────────────────────────────────────────────
+
+// 📌 Add Link (POST /tasks/:id/links)
+router.post("/:id/links", authMiddleware, async (req, res) => {
+  try {
+    const { url, label } = req.body;
+    if (!url || !url.trim())
+      return res.status(400).json({ message: "Link URL is required." });
+
+    // Basic URL sanity check
+    try { new URL(url.trim()); } catch {
+      return res.status(400).json({ message: "Invalid URL." });
+    }
+
+    const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
+    if (!task) return res.status(404).json({ message: "Task not found." });
+
+    task.links.push({ url: url.trim(), label: (label || "").trim() });
+    await task.save();
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 📌 Delete Link (DELETE /tasks/:id/links/:linkId)
+router.delete("/:id/links/:linkId", authMiddleware, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
+    if (!task) return res.status(404).json({ message: "Task not found." });
+
+    task.links.pull({ _id: req.params.linkId });
     await task.save();
     res.json(task);
   } catch (error) {

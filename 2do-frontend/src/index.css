@@ -55,7 +55,7 @@
     box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.10);
   }
   .dark .panel-elevated {
-    @apply bg-[#0f0f0f] border-ink-4;
+    @apply bg-[#212121] border-ink-4;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.5);
   }
 

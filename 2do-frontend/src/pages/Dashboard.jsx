@@ -14,7 +14,7 @@ import {
   Check, RotateCcw, Pencil, Trash2, LogOut, Plus, X,
   ChevronDown, ChevronUp, SlidersHorizontal, Calendar,
   Flag, GripVertical, Sun, Flame, Clock, Keyboard,
-  LayoutList, Columns2, TrendingUp, Circle,
+  LayoutList, Columns2, TrendingUp, Circle, Link, ExternalLink,
 } from "lucide-react";
 import Logo from "../assets/svg";
 import QuickAdd from "../components/QuickAdd";
@@ -52,7 +52,7 @@ function PriorityPicker({ value, onChange }) {
       </button>
       {open && (
         <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border shadow-2xl overflow-hidden min-w-[130px]
-                        border-black/10 bg-white dark:border-white/8 dark:bg-[#111]">
+                        border-black/10 bg-white dark:border-white/8 dark:bg-brand-dark">
           {Object.entries(PRIORITIES).map(([k, c]) => (
             <button key={k} type="button" onClick={() => { onChange(k); setOpen(false); }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition duration-100 ${value === k ? `${c.bg} ${c.color}` : "text-lm-text2 dark:text-white/50 hover:bg-black/5 dark:hover:bg-white/6 hover:text-lm-text1 dark:hover:text-white"}`}>
@@ -117,11 +117,11 @@ function StreakBadge({ streak, longestStreak }) {
       </button>
       {tip && (
         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap rounded-xl shadow-2xl text-xs pointer-events-none
-                        border border-black/10 bg-white dark:border-white/8 dark:bg-[#111] px-3 py-2.5">
+                        border border-black/10 bg-white dark:border-white/8 dark:bg-brand-dark px-3 py-2.5">
           <p className="font-semibold text-lm-text1 dark:text-white">{streak}-day streak</p>
           {longestStreak > 0 && <p className="text-lm-text2 dark:text-white/35 mt-0.5">Best: {longestStreak} days</p>}
           <p className="text-lm-text3 dark:text-white/25 mt-0.5">Complete a task daily to keep it alive</p>
-          <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-l border-t bg-white dark:bg-[#111] border-black/10 dark:border-white/8" />
+          <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-l border-t bg-white dark:bg-brand-dark border-black/10 dark:border-white/8" />
         </div>
       )}
     </div>
@@ -140,7 +140,7 @@ function ShortcutHint() {
       </button>
       {open && (
         <div className="absolute top-full right-0 mt-2 z-50 w-48 rounded-xl shadow-2xl p-3 space-y-1
-                        border border-black/10 bg-white dark:border-white/8 dark:bg-[#111]"
+                        border border-black/10 bg-white dark:border-white/8 dark:bg-brand-dark"
              onMouseDown={e => e.preventDefault()}>
           <p className="text-[9px] font-semibold uppercase tracking-widest px-1 pb-1.5
                         text-lm-text3 dark:text-white/25">Shortcuts</p>
@@ -222,6 +222,116 @@ function KanbanCard({ task, onEdit, onDelete, onToggleFocus }) {
             <Calendar className="w-2.5 h-2.5"/>{new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
           </span>
         </div>
+      )}
+      {task.links?.length > 0 && (
+        <div className="pl-5 flex flex-wrap gap-1">
+          {task.links.map(l => (
+            <a key={l._id} href={l.url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[10px] text-sky-400/70 hover:text-sky-400 transition">
+              <Link className="w-2.5 h-2.5" />{l.label || new URL(l.url).hostname}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── TaskLinks ─── */
+function TaskLinks({ task, onUpdate }) {
+  const [adding, setAdding] = useState(false);
+  const [url, setUrl]       = useState("");
+  const [label, setLabel]   = useState("");
+  const [busy, setBusy]     = useState(false);
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!url.trim()) return;
+    setBusy(true);
+    try {
+      const updated = await authRequest(`tasks/${task._id}/links`, { url: url.trim(), label: label.trim() }, "POST");
+      onUpdate(updated);
+      setUrl(""); setLabel(""); setAdding(false);
+    } catch {}
+    setBusy(false);
+  };
+
+  const handleDelete = async (linkId) => {
+    try {
+      const updated = await authRequest(`tasks/${task._id}/links/${linkId}`, null, "DELETE");
+      onUpdate(updated);
+    } catch {}
+  };
+
+  const links = task.links ?? [];
+
+  return (
+    <div className="pl-7 space-y-1.5">
+      {/* Existing links */}
+      {links.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {links.map(l => (
+            <div key={l._id} className="group flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-lg border text-[11px]
+                                        border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02]
+                                        hover:border-sky-400/30 dark:hover:border-sky-400/25 transition duration-150">
+              <Link className="w-2.5 h-2.5 shrink-0 text-sky-400/60" />
+              <a href={l.url} target="_blank" rel="noopener noreferrer"
+                className="max-w-[180px] truncate text-sky-500 dark:text-sky-400 hover:underline font-medium leading-none">
+                {l.label || l.url}
+              </a>
+              <a href={l.url} target="_blank" rel="noopener noreferrer" tabIndex={-1}
+                className="text-lm-text3 dark:text-white/20 hover:text-sky-400 transition ml-0.5" aria-label="Open link">
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+              <button onClick={() => handleDelete(l._id)} aria-label="Remove link"
+                className="ml-0.5 text-lm-text3 dark:text-white/15 hover:text-red-400 transition opacity-0 group-hover:opacity-100">
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add form */}
+      {adding ? (
+        <form onSubmit={handleAdd} className="flex flex-col gap-1.5 pt-0.5">
+          <div className="flex gap-1.5">
+            <input
+              type="url"
+              placeholder="https://…"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              required
+              autoFocus
+              className="input-dark text-xs py-1.5 flex-1 min-w-0"
+            />
+            <input
+              type="text"
+              placeholder="Label (optional)"
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              className="input-dark text-xs py-1.5 w-28 shrink-0"
+            />
+          </div>
+          <div className="flex gap-1.5">
+            <button type="submit" disabled={busy || !url.trim()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition
+                         bg-sky-500/10 text-sky-500 dark:text-sky-400 hover:bg-sky-500/20 disabled:opacity-40">
+              <Check className="w-3 h-3" />Add
+            </button>
+            <button type="button" onClick={() => { setAdding(false); setUrl(""); setLabel(""); }}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition
+                         text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5">
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button onClick={() => setAdding(true)}
+          className="flex items-center gap-1 text-[11px] font-medium transition
+                     text-lm-text3 dark:text-white/25 hover:text-sky-500 dark:hover:text-sky-400">
+          <Plus className="w-3 h-3" />Add link
+        </button>
       )}
     </div>
   );
@@ -481,84 +591,88 @@ export default function Dashboard() {
       )}
 
       {/* ── MAIN LAYOUT ── */}
-      <main className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-10 pt-8 pb-20">
-        <div className="flex flex-col lg:flex-row lg:gap-10">
+      <main className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-10 pt-6 pb-20">
 
-          {/* ════ SIDEBAR ════ */}
-          <aside className="w-full lg:w-56 xl:w-64 shrink-0 lg:sticky lg:top-20 lg:self-start space-y-6">
-
-            {/* Metrics */}
-            <div className="rounded-2xl border px-5 py-5 space-y-5
-                            border-black/[0.07] bg-black/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02]">
-              <div className="flex lg:flex-col gap-5 lg:gap-5 justify-between">
-                <StatTile label="Total"   value={total}   accent="text-lm-text1 dark:text-white/90" />
-                <StatTile label="Done"    value={done}    accent="text-emerald-500 dark:text-emerald-400" />
-                <StatTile label="Pending" value={pending} accent="text-amber-500 dark:text-brand-yellow" />
-              </div>
-              {total > 0 && (
-                <div className="space-y-1.5 pt-1 border-t border-black/[0.06] dark:border-white/[0.05]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/25">Progress</span>
-                    <span className="text-[10px] font-semibold tabular-nums text-amber-500 dark:text-brand-yellow">{progress}%</span>
-                  </div>
-                  <div className="h-[3px] rounded-full bg-black/[0.07] dark:bg-white/[0.07] overflow-hidden">
-                    <div className="h-full rounded-full bg-brand-yellow transition-all duration-700" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-              )}
-              {streak > 0 && (
-                <div className="flex items-center justify-between pt-1 border-t border-black/[0.06] dark:border-white/[0.05]">
-                  <div className="flex items-center gap-1.5">
-                    <Flame className={`w-3.5 h-3.5 ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`} />
-                    <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/35">Streak</span>
-                  </div>
-                  <span className={`text-sm font-semibold tabular-nums ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`}>{streak}d</span>
-                </div>
-              )}
+        {/* ════ TOP PANEL ════ */}
+        <div className="mb-5 rounded-2xl border px-5 py-4
+                        border-black/[0.07] bg-black/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02]">
+          {/* Stats row */}
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <div className="flex items-center gap-8">
+              <StatTile label="Total"   value={total}   accent="text-lm-text1 dark:text-white/90" />
+              <StatTile label="Done"    value={done}    accent="text-emerald-500 dark:text-emerald-400" />
+              <StatTile label="Pending" value={pending} accent="text-amber-500 dark:text-brand-yellow" />
             </div>
 
-            {/* Filters — hidden in Today view */}
-            {viewMode === "all" && (
-              <div className="space-y-5">
-
-                {/* Status */}
-                <div className="space-y-1">
-                  <p className="form-label-dark">Status</p>
-                  {[["all","All tasks"],["pending","Pending"],["completed","Completed"]].map(([v,l]) => (
-                    <button key={v} onClick={() => setFilter(v)}
-                      className={`nav-btn ${filter === v ? "nav-btn-active" : ""}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${v === "all" ? "bg-black/30 dark:bg-white/30" : v === "pending" ? "bg-brand-yellow" : "bg-emerald-400"}`} />
-                      {l}
-                    </button>
-                  ))}
+            {/* Progress bar */}
+            {total > 0 && (
+              <div className="flex-1 min-w-[120px] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/25">Progress</span>
+                  <span className="text-[10px] font-semibold tabular-nums text-amber-500 dark:text-brand-yellow">{progress}%</span>
                 </div>
-
-                {/* Priority */}
-                <div className="space-y-1">
-                  <p className="form-label-dark">Priority</p>
-                  {[["all","All","bg-black/20 dark:bg-white/20"],["high","High","bg-red-400"],["medium","Medium","bg-amber-400"],["low","Low","bg-emerald-400"]].map(([v,l,dot]) => (
-                    <button key={v} onClick={() => setPriorityFilter(v)}
-                      className={`nav-btn ${priorityFilter === v ? "nav-btn-active" : ""}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{l}
-                    </button>
-                  ))}
+                <div className="h-[3px] rounded-full bg-black/[0.07] dark:bg-white/[0.07] overflow-hidden">
+                  <div className="h-full rounded-full bg-brand-yellow transition-all duration-700" style={{ width: `${progress}%` }} />
                 </div>
-
-                {/* Sort — desktop only */}
-                <div className="hidden lg:block space-y-1.5">
-                  <p className="form-label-dark">Sort by</p>
-                  <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="input-dark text-xs py-2">
-                    {SORT_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-                  </select>
-                </div>
-
               </div>
             )}
 
-          </aside>
+            {/* Streak */}
+            {streak > 0 && (
+              <div className="flex items-center gap-1.5 pl-2 border-l border-black/[0.07] dark:border-white/[0.06]">
+                <Flame className={`w-3.5 h-3.5 ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`} />
+                <span className={`text-sm font-semibold tabular-nums ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`}>{streak}d</span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/35">streak</span>
+              </div>
+            )}
+          </div>
 
+          {/* Filters row — hidden in Today view */}
+          {viewMode === "all" && (
+            <div className="mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.05] flex flex-wrap items-center gap-x-6 gap-y-3">
+
+              {/* Status */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25 mr-1">Status</span>
+                {[["all","All tasks"],["pending","Pending"],["completed","Completed"]].map(([v,l]) => (
+                  <button key={v} onClick={() => setFilter(v)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition duration-150 ${filter === v ? "bg-black/8 dark:bg-white/8 text-lm-text1 dark:text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${v === "all" ? "bg-black/30 dark:bg-white/30" : v === "pending" ? "bg-brand-yellow" : "bg-emerald-400"}`} />
+                    {l}
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-px h-4 bg-black/[0.08] dark:bg-white/[0.08]" />
+
+              {/* Priority */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25 mr-1">Priority</span>
+                {[["all","All","bg-black/20 dark:bg-white/20"],["high","High","bg-red-400"],["medium","Medium","bg-amber-400"],["low","Low","bg-emerald-400"]].map(([v,l,dot]) => (
+                  <button key={v} onClick={() => setPriorityFilter(v)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition duration-150 ${priorityFilter === v ? "bg-black/8 dark:bg-white/8 text-lm-text1 dark:text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{l}
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-px h-4 bg-black/[0.08] dark:bg-white/[0.08]" />
+
+              {/* Sort */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25">Sort</span>
+                <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="input-dark text-xs py-1 h-auto">
+                  {SORT_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+                </select>
+              </div>
+
+            </div>
+          )}
+        </div>
+
+        <div>
           {/* ════ TASK FEED ════ */}
-          <section className="flex-1 min-w-0 mt-6 lg:mt-0 space-y-4">
+          <section className="space-y-4">
 
             {/* ── Top bar ── */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -580,14 +694,8 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Layout + mobile sort */}
+              {/* Layout toggle */}
               <div className="flex items-center gap-2">
-                {viewMode === "all" && layoutMode === "list" && (
-                  <button onClick={() => setShowSort(!showSort)}
-                    className={`lg:hidden flex items-center gap-1.5 text-xs font-medium transition ${showSort ? "text-brand-yellow" : "text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white"}`}>
-                    <SlidersHorizontal className="w-3.5 h-3.5" />Sort
-                  </button>
-                )}
                 <div className="flex items-center gap-0.5 p-0.5 rounded-xl border
                                 bg-black/[0.04] border-black/[0.07]
                                 dark:bg-white/[0.04] dark:border-white/[0.06]">
@@ -600,18 +708,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Mobile sort panel */}
-            {viewMode === "all" && layoutMode === "list" && showSort && (
-              <div className="lg:hidden rounded-xl border px-4 py-3
-                              border-black/[0.07] bg-black/[0.02]
-                              dark:border-white/[0.06] dark:bg-white/[0.02]">
-                <label className="form-label-dark">Sort by</label>
-                <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="input-dark text-xs py-2">
-                  {SORT_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-                </select>
-              </div>
-            )}
 
             {/* Today context line */}
             {viewMode === "today" && (
@@ -817,6 +913,9 @@ export default function Dashboard() {
                               {/* Subtasks */}
                               {!isEdit && <Subtasks task={task} onUpdate={handleSubtaskUpdate} />}
 
+                              {/* Links */}
+                              {!isEdit && <TaskLinks task={task} onUpdate={handleSubtaskUpdate} />}
+
                               {/* Description */}
                               {isEdit ? (
                                 <textarea value={editingDescription} onChange={e => setEditingDescription(e.target.value)} className="input-dark text-sm resize-none pl-7" rows={2} placeholder="Description…" />
@@ -865,3 +964,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

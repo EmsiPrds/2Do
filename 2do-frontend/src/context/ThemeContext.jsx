@@ -14,11 +14,11 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     if (isDark) {
       root.classList.add("dark");
-      root.style.backgroundColor = "#080808";
+      root.style.backgroundColor = "#212121";
       root.style.colorScheme = "dark";
     } else {
       root.classList.remove("dark");
-      root.style.backgroundColor = "#F8F8F8";
+      root.style.backgroundColor = "#EFEFEF";
       root.style.colorScheme = "light";
     }
     localStorage.setItem("theme", isDark ? "dark" : "light");

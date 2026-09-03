@@ -6,6 +6,12 @@ const SubtaskSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+const LinkSchema = new mongoose.Schema({
+  url:   { type: String, required: true },
+  label: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const TaskSchema = new mongoose.Schema({
   user:      { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   title:     { type: String, required: true },
@@ -19,6 +25,7 @@ const TaskSchema = new mongoose.Schema({
     default: "medium",
   },
   subtasks:  { type: [SubtaskSchema], default: [] },
+  links:     { type: [LinkSchema], default: [] },
   order:     { type: Number, default: 0 },
   focusToday: { type: Boolean, default: false },
   status: {
