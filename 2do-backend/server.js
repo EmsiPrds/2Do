@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: ["https://2do.mvpvisuals.art", "http://localhost:5173"] }));
+app.use(cors({ origin: ["https://2do.mvpvisuals.art", "https://twodo-frontend.onrender.com", "http://localhost:5173"] }));
 
 connectDB();
 app.use("/api/auth", authRoutes);
