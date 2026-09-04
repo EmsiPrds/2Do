@@ -28,6 +28,7 @@ const TaskSchema = new mongoose.Schema({
   links:     { type: [LinkSchema], default: [] },
   order:     { type: Number, default: 0 },
   focusToday: { type: Boolean, default: false },
+  forReport:  { type: Boolean, default: false },
   status: {
     type: String,
     enum: ["todo", "in-progress", "done"],

@@ -8,7 +8,7 @@ const router = express.Router();
 // 📌 Create Task (POST)
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { title, description, dueDate, priority, status } = req.body;
+    const { title, description, dueDate, priority, status, forReport } = req.body;
 
     if (!title || title.trim() === "") {
       return res.status(400).json({ message: "Task title is required." });
@@ -31,6 +31,7 @@ router.post("/", authMiddleware, async (req, res) => {
       dueDate,
       priority: resolvedPriority,
       status: resolvedStatus,
+      forReport: forReport === true,
     });
 
     await newTask.save();
@@ -56,7 +57,7 @@ router.get("/", authMiddleware, async (req, res) => {
 // 📌 Update Task (PUT)
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { title, description, dueDate, completed, priority, focusToday, status, links } = req.body;
+    const { title, description, dueDate, completed, priority, focusToday, forReport, status, links } = req.body;
     const task = await Task.findOne({ _id: req.params.id, user: req.user.id });
 
     if (!task) return res.status(404).json({ message: "Task not found." });
@@ -100,6 +101,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     }
 
     if (focusToday !== undefined) task.focusToday = focusToday;
+    if (forReport  !== undefined) task.forReport  = forReport === true;
 
     // ✅ Replace entire links array when provided
     if (links !== undefined && Array.isArray(links)) {

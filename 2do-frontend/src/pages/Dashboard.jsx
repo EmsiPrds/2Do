@@ -15,6 +15,7 @@ import {
   ChevronDown, ChevronUp, SlidersHorizontal, Calendar,
   Flag, GripVertical, Sun, Flame, Clock, Keyboard,
   LayoutList, Columns2, TrendingUp, Circle, Link, ExternalLink,
+  FileText, ClipboardList, Printer, Copy,
 } from "lucide-react";
 import Logo from "../assets/svg";
 import QuickAdd from "../components/QuickAdd";
@@ -77,6 +78,86 @@ function PriorityBadge({ priority }) {
   );
 }
 
+/* ─── PriorityFilterDropdown ─── */
+const PRIORITY_DOT = { all: "bg-black/25 dark:bg-white/25", high: "bg-red-400", medium: "bg-amber-400", low: "bg-emerald-400" };
+const PRIORITY_LABELS = { all: "Priority", high: "High", medium: "Medium", low: "Low" };
+const PRIORITY_DOT_ACTIVE = { high: "bg-red-400", medium: "bg-amber-400", low: "bg-emerald-400" };
+function PriorityFilterDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const isActive = value !== "all";
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(p => !p)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition duration-150
+          ${isActive
+            ? "border-brand-yellow/40 bg-brand-yellow/8 text-lm-text1 dark:text-white"
+            : "border-black/[0.07] dark:border-white/[0.06] bg-black/[0.03] dark:bg-white/[0.03] text-lm-text2 dark:text-white/40 hover:text-lm-text1 dark:hover:text-white/70"}`}>
+        {isActive && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${PRIORITY_DOT_ACTIVE[value]}`} />}
+        {PRIORITY_LABELS[value]}
+        <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border shadow-2xl overflow-hidden min-w-[130px]
+                        border-black/10 bg-white dark:border-white/8 dark:bg-brand-dark">
+          {Object.entries(PRIORITY_DOT).map(([v, dot]) => (
+            <button key={v} onClick={() => { onChange(v); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition duration-100
+                ${value === v ? "bg-black/5 dark:bg-white/6 text-lm-text1 dark:text-white" : "text-lm-text2 dark:text-white/50 hover:bg-black/5 dark:hover:bg-white/6 hover:text-lm-text1 dark:hover:text-white"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+              {PRIORITY_LABELS[v]}
+              {value === v && <Check className="w-3 h-3 ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── SortDropdown ─── */
+function SortDropdown({ value, onChange, opts }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const current = opts.find(o => o.v === value);
+  const isActive = value !== "manual";
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(p => !p)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition duration-150
+          ${isActive
+            ? "border-brand-yellow/40 bg-brand-yellow/8 text-lm-text1 dark:text-white"
+            : "border-black/[0.07] dark:border-white/[0.06] bg-black/[0.03] dark:bg-white/[0.03] text-lm-text2 dark:text-white/40 hover:text-lm-text1 dark:hover:text-white/70"}`}>
+        {current?.l ?? "Sort"}
+        <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-30 rounded-xl border shadow-2xl overflow-hidden min-w-[150px]
+                        border-black/10 bg-white dark:border-white/8 dark:bg-brand-dark">
+          {opts.map(o => (
+            <button key={o.v} onClick={() => { onChange(o.v); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition duration-100
+                ${value === o.v ? "bg-black/5 dark:bg-white/6 text-lm-text1 dark:text-white" : "text-lm-text2 dark:text-white/50 hover:bg-black/5 dark:hover:bg-white/6 hover:text-lm-text1 dark:hover:text-white"}`}>
+              {o.l}
+              {value === o.v && <Check className="w-3 h-3 ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Avatar ─── */
 function Avatar({ avatarUrl, username, onClick }) {
   if (avatarUrl) return (
@@ -88,17 +169,6 @@ function Avatar({ avatarUrl, username, onClick }) {
       className="w-8 h-8 rounded-full bg-brand-yellow text-brand-dark flex items-center justify-center font-bold text-sm hover:brightness-110 transition">
       {username?.charAt(0).toUpperCase() ?? "?"}
     </button>
-  );
-}
-
-/* ─── StatTile ─── */
-function StatTile({ label, value, accent, sub }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className={`text-2xl font-semibold tracking-tight tabular-nums ${accent}`}>{value}</span>
-      <span className="text-[10px] font-medium text-lm-text3 dark:text-white/35 uppercase tracking-[0.07em]">{label}</span>
-      {sub && <span className="text-[10px] text-lm-text3 dark:text-white/20 mt-0.5">{sub}</span>}
-    </div>
   );
 }
 
@@ -345,6 +415,244 @@ function fireConfetti() {
 }
 
 /* ════════════════════════════════════════
+   REPORT VIEW
+════════════════════════════════════════ */
+function ReportView({ tasks, reportMonth, setReportMonth, onToggleForReport }) {
+  const [copied, setCopied] = useState(false);
+
+  // All months that have at least one forReport task (completed or not), for the month picker
+  const availableMonths = [...new Set(
+    tasks
+      .filter(t => t.forReport)
+      .map(t => {
+        const d = t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      })
+  )].sort((a, b) => b.localeCompare(a));
+
+  // Tasks for report tagged for the selected month
+  const [selYear, selMonth] = reportMonth.split("-").map(Number);
+  const monthTasks = tasks.filter(t => {
+    if (!t.forReport) return false;
+    const d = t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt);
+    return d.getFullYear() === selYear && d.getMonth() + 1 === selMonth;
+  });
+  const completedTasks = monthTasks.filter(t => t.completed);
+  const pendingTasks   = monthTasks.filter(t => !t.completed);
+
+  const monthLabel = new Date(selYear, selMonth - 1, 1)
+    .toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  // Plain-text report for copy / print
+  const buildReportText = () => {
+    const lines = [];
+    lines.push(`MONTHLY ACCOMPLISHMENT REPORT`);
+    lines.push(`Period: ${monthLabel}`);
+    lines.push(`Generated: ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}`);
+    lines.push(`${"─".repeat(50)}`);
+    lines.push(``);
+    if (completedTasks.length > 0) {
+      lines.push(`COMPLETED TASKS (${completedTasks.length})`);
+      completedTasks.forEach((t, i) => {
+        lines.push(`  ${i + 1}. ${t.title}`);
+        if (t.description) lines.push(`     ${t.description}`);
+        if (t.completedAt) lines.push(`     Completed: ${new Date(t.completedAt).toLocaleDateString()}`);
+        if (t.priority)    lines.push(`     Priority: ${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}`);
+      });
+      lines.push(``);
+    }
+    if (pendingTasks.length > 0) {
+      lines.push(`ONGOING / PENDING TASKS (${pendingTasks.length})`);
+      pendingTasks.forEach((t, i) => {
+        lines.push(`  ${i + 1}. ${t.title}`);
+        if (t.description) lines.push(`     ${t.description}`);
+        if (t.dueDate)     lines.push(`     Due: ${new Date(t.dueDate).toLocaleDateString()}`);
+        if (t.priority)    lines.push(`     Priority: ${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}`);
+      });
+      lines.push(``);
+    }
+    lines.push(`${"─".repeat(50)}`);
+    lines.push(`Total for report: ${monthTasks.length}  |  Completed: ${completedTasks.length}  |  Pending: ${pendingTasks.length}`);
+    return lines.join("\n");
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(buildReportText()).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handlePrint = () => {
+    const w = window.open("", "_blank");
+    w.document.write(`<html><head><title>Report – ${monthLabel}</title>
+      <style>body{font-family:monospace;font-size:13px;padding:32px;white-space:pre-wrap;color:#111}</style>
+      </head><body>${buildReportText().replace(/&/g,"&amp;").replace(/</g,"&lt;")}</body></html>`);
+    w.document.close();
+    w.print();
+  };
+
+  const PRIORITY_COLOR = { high: "text-red-400", medium: "text-amber-400", low: "text-emerald-400" };
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Header bar ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {/* Month picker */}
+          <select value={reportMonth} onChange={e => setReportMonth(e.target.value)}
+            className="input-dark text-xs py-1.5 h-auto w-auto">
+            {/* Always show current month even if no tasks yet */}
+            {[...new Set([reportMonth, ...availableMonths])].sort((a,b) => b.localeCompare(a)).map(m => {
+              const [y, mo] = m.split("-").map(Number);
+              const label = new Date(y, mo - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+              return <option key={m} value={m}>{label}</option>;
+            })}
+          </select>
+          <span className="text-xs text-lm-text3 dark:text-white/30">
+            {monthTasks.length} task{monthTasks.length !== 1 ? "s" : ""} for report
+          </span>
+        </div>
+        {monthTasks.length > 0 && (
+          <div className="flex items-center gap-2">
+            <button onClick={handleCopy}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition duration-150
+                ${copied
+                  ? "border-emerald-400/40 bg-emerald-400/8 text-emerald-500 dark:text-emerald-400"
+                  : "border-black/[0.08] dark:border-white/[0.08] text-lm-text2 dark:text-white/40 hover:text-lm-text1 dark:hover:text-white/70"}`}>
+              <Copy className="w-3.5 h-3.5" />
+              {copied ? "Copied!" : "Copy text"}
+            </button>
+            <button onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition duration-150
+                border-black/[0.08] dark:border-white/[0.08] text-lm-text2 dark:text-white/40 hover:text-lm-text1 dark:hover:text-white/70">
+              <Printer className="w-3.5 h-3.5" />Print
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Empty state ── */}
+      {monthTasks.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+          <div className="w-12 h-12 rounded-full bg-violet-400/8 border border-violet-400/15 flex items-center justify-center">
+            <ClipboardList className="w-6 h-6 text-violet-400/50" />
+          </div>
+          <p className="text-sm font-medium text-lm-text1 dark:text-white/60">No tasks marked for report</p>
+          <p className="text-xs text-lm-text3 dark:text-white/25 max-w-xs">
+            Tag tasks with the <FileText className="w-3 h-3 inline mx-0.5 text-violet-400" /> icon to include them here.
+          </p>
+        </div>
+      )}
+
+      {/* ── Report card ── */}
+      {monthTasks.length > 0 && (
+        <div className="rounded-2xl border overflow-hidden
+                        border-black/[0.08] dark:border-white/[0.07] bg-white dark:bg-white/[0.02]">
+
+          {/* Report heading */}
+          <div className="px-6 py-4 border-b border-black/[0.06] dark:border-white/[0.05] bg-violet-400/[0.03]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 dark:text-violet-400">Monthly Accomplishment Report</p>
+            <p className="text-sm font-semibold text-lm-text1 dark:text-white/85 mt-0.5">{monthLabel}</p>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-xs text-emerald-500 dark:text-emerald-400 font-medium">{completedTasks.length} completed</span>
+              <span className="text-xs text-amber-500 dark:text-amber-400 font-medium">{pendingTasks.length} pending</span>
+            </div>
+          </div>
+
+          {/* Completed section */}
+          {completedTasks.length > 0 && (
+            <div className="px-6 py-4 space-y-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-500 dark:text-emerald-400">
+                Completed ({completedTasks.length})
+              </p>
+              {completedTasks.map((t, i) => (
+                <div key={t._id} className="flex items-start gap-3 group">
+                  <span className="mt-0.5 text-[10px] font-mono text-lm-text3 dark:text-white/20 w-4 shrink-0 text-right">{i + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-lm-text1 dark:text-white/85 leading-snug">{t.title}</span>
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide ${PRIORITY_COLOR[t.priority ?? "medium"]}`}>
+                        {t.priority ?? "medium"}
+                      </span>
+                    </div>
+                    {t.description && (
+                      <p className="text-xs text-lm-text2 dark:text-white/30 mt-0.5 leading-relaxed">{t.description}</p>
+                    )}
+                    {t.completedAt && (
+                      <p className="text-[10px] text-lm-text3 dark:text-white/20 mt-0.5">
+                        Completed {new Date(t.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={() => onToggleForReport(t)} title="Remove from report"
+                    className="shrink-0 mt-0.5 p-1 rounded opacity-0 group-hover:opacity-100 transition
+                               text-lm-text3 dark:text-white/20 hover:text-red-400">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Divider between sections */}
+          {completedTasks.length > 0 && pendingTasks.length > 0 && (
+            <div className="mx-6 border-t border-black/[0.06] dark:border-white/[0.05]" />
+          )}
+
+          {/* Pending section */}
+          {pendingTasks.length > 0 && (
+            <div className="px-6 py-4 space-y-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-400">
+                Ongoing / Pending ({pendingTasks.length})
+              </p>
+              {pendingTasks.map((t, i) => (
+                <div key={t._id} className="flex items-start gap-3 group">
+                  <span className="mt-0.5 text-[10px] font-mono text-lm-text3 dark:text-white/20 w-4 shrink-0 text-right">{i + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-lm-text1 dark:text-white/85 leading-snug">{t.title}</span>
+                      <span className={`text-[10px] font-semibold uppercase tracking-wide ${PRIORITY_COLOR[t.priority ?? "medium"]}`}>
+                        {t.priority ?? "medium"}
+                      </span>
+                    </div>
+                    {t.description && (
+                      <p className="text-xs text-lm-text2 dark:text-white/30 mt-0.5 leading-relaxed">{t.description}</p>
+                    )}
+                    {t.dueDate && (
+                      <p className="text-[10px] text-lm-text3 dark:text-white/20 mt-0.5">
+                        Due {new Date(t.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={() => onToggleForReport(t)} title="Remove from report"
+                    className="shrink-0 mt-0.5 p-1 rounded opacity-0 group-hover:opacity-100 transition
+                               text-lm-text3 dark:text-white/20 hover:text-red-400">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Footer summary */}
+          <div className="px-6 py-3 border-t border-black/[0.06] dark:border-white/[0.05] bg-black/[0.015] dark:bg-white/[0.01]
+                          flex items-center justify-between">
+            <span className="text-[10px] text-lm-text3 dark:text-white/25">
+              Generated {new Date().toLocaleDateString("en-US", { dateStyle: "medium" })}
+            </span>
+            <span className="text-[10px] text-lm-text3 dark:text-white/25">
+              Total: {monthTasks.length} &nbsp;·&nbsp; Done: {completedTasks.length} &nbsp;·&nbsp; Pending: {pendingTasks.length}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
    DASHBOARD
 ════════════════════════════════════════ */
 export default function Dashboard() {
@@ -353,11 +661,17 @@ export default function Dashboard() {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("medium");
+  const [forReport, setForReport] = useState(false);
+  const [reportMonth, setReportMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
   const [editingPriority, setEditingPriority] = useState("medium");
+  const [editingForReport, setEditingForReport] = useState(false);
   const [expandedTaskIds, setExpandedTaskIds] = useState([]);
   const [filter, setFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -457,7 +771,7 @@ export default function Dashboard() {
   /* ── task actions ── */
   const handleAddTask = async (e) => {
     e.preventDefault();
-    try { await authRequest("tasks", { title, description, dueDate, priority }, "POST"); setTitle(""); setDescription(""); setDueDate(""); setPriority("medium"); setShowAddForm(false); fetchTasks(); } catch {}
+    try { await authRequest("tasks", { title, description, dueDate, priority, forReport }, "POST"); setTitle(""); setDescription(""); setDueDate(""); setPriority("medium"); setForReport(false); setShowAddForm(false); fetchTasks(); } catch {}
   };
   const handleQuickAdd = async ({ title: t, dueDate: d }) => {
     if (!t?.trim()) return;
@@ -475,16 +789,22 @@ export default function Dashboard() {
     } catch {}
   };
   const handleUpdateTask = async (id) => {
-    try { await authRequest(`tasks/${id}`, { title: editingTitle, description: editingDescription, priority: editingPriority }, "PUT"); setEditingTaskId(null); fetchTasks(); } catch {}
+    try { await authRequest(`tasks/${id}`, { title: editingTitle, description: editingDescription, priority: editingPriority, forReport: editingForReport }, "PUT"); setEditingTaskId(null); fetchTasks(); } catch {}
   };
-  const startEdit = (t) => { setEditingTaskId(t._id); setEditingTitle(t.title); setEditingDescription(t.description || ""); setEditingPriority(t.priority || "medium"); };
-  const cancelEdit = () => { setEditingTaskId(null); setEditingTitle(""); setEditingDescription(""); setEditingPriority("medium"); };
+  const startEdit = (t) => { setEditingTaskId(t._id); setEditingTitle(t.title); setEditingDescription(t.description || ""); setEditingPriority(t.priority || "medium"); setEditingForReport(t.forReport ?? false); };
+  const cancelEdit = () => { setEditingTaskId(null); setEditingTitle(""); setEditingDescription(""); setEditingPriority("medium"); setEditingForReport(false); };
   const handleSubtaskUpdate = (t) => setTasks(prev => prev.map(x => x._id === t._id ? t : x));
   const toggleFocusToday = async (task) => {
     const next = !task.focusToday;
     setTasks(prev => prev.map(t => t._id === task._id ? { ...t, focusToday: next } : t));
     try { await authRequest(`tasks/${task._id}`, { focusToday: next }, "PUT"); }
     catch { setTasks(prev => prev.map(t => t._id === task._id ? { ...t, focusToday: task.focusToday } : t)); }
+  };
+  const toggleForReport = async (task) => {
+    const next = !task.forReport;
+    setTasks(prev => prev.map(t => t._id === task._id ? { ...t, forReport: next } : t));
+    try { await authRequest(`tasks/${task._id}`, { forReport: next }, "PUT"); }
+    catch { setTasks(prev => prev.map(t => t._id === task._id ? { ...t, forReport: task.forReport } : t)); }
   };
   const toggleDescription = (id) => setExpandedTaskIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const handleLogout = () => { localStorage.removeItem("token"); window.location.href = "/login"; };
@@ -498,6 +818,7 @@ export default function Dashboard() {
   const pending = total - done;
   const highUrgent = tasks.filter(t => !t.completed && t.priority === "high").length;
   const todayCount = tasks.filter(t => !t.completed && (isToday(t.dueDate) || t.focusToday)).length;
+  const reportCount = tasks.filter(t => t.forReport).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const filteredTasks = tasks
@@ -593,82 +914,66 @@ export default function Dashboard() {
       {/* ── MAIN LAYOUT ── */}
       <main className="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-10 pt-6 pb-20">
 
-        {/* ════ TOP PANEL ════ */}
-        <div className="mb-5 rounded-2xl border px-5 py-4
-                        border-black/[0.07] bg-black/[0.02] dark:border-white/[0.06] dark:bg-white/[0.02]">
-          {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-            <div className="flex items-center gap-8">
-              <StatTile label="Total"   value={total}   accent="text-lm-text1 dark:text-white/90" />
-              <StatTile label="Done"    value={done}    accent="text-emerald-500 dark:text-emerald-400" />
-              <StatTile label="Pending" value={pending} accent="text-amber-500 dark:text-brand-yellow" />
-            </div>
-
-            {/* Progress bar */}
-            {total > 0 && (
-              <div className="flex-1 min-w-[120px] space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/25">Progress</span>
-                  <span className="text-[10px] font-semibold tabular-nums text-amber-500 dark:text-brand-yellow">{progress}%</span>
-                </div>
-                <div className="h-[3px] rounded-full bg-black/[0.07] dark:bg-white/[0.07] overflow-hidden">
-                  <div className="h-full rounded-full bg-brand-yellow transition-all duration-700" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-            )}
-
-            {/* Streak */}
-            {streak > 0 && (
-              <div className="flex items-center gap-1.5 pl-2 border-l border-black/[0.07] dark:border-white/[0.06]">
-                <Flame className={`w-3.5 h-3.5 ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`} />
-                <span className={`text-sm font-semibold tabular-nums ${streak >= 30 ? "text-red-400" : streak >= 7 ? "text-orange-400" : "text-orange-300"}`}>{streak}d</span>
-                <span className="text-[10px] font-medium uppercase tracking-widest text-lm-text3 dark:text-white/35">streak</span>
-              </div>
-            )}
+        {/* ════ STATS ROW ════ */}
+        <div className="mb-3 flex items-center gap-6 flex-wrap">
+          {/* Stat chips */}
+          <div className="flex items-center gap-1">
+            <span className="text-2xl font-semibold tabular-nums text-lm-text1 dark:text-white/90">{total}</span>
+            <span className="text-xs font-medium text-lm-text3 dark:text-white/30 ml-1 mt-0.5">total</span>
+          </div>
+          <div className="w-px h-5 bg-black/[0.08] dark:bg-white/[0.07]" />
+          <div className="flex items-center gap-1">
+            <span className="text-2xl font-semibold tabular-nums text-emerald-500 dark:text-emerald-400">{done}</span>
+            <span className="text-xs font-medium text-lm-text3 dark:text-white/30 ml-1 mt-0.5">done</span>
+          </div>
+          <div className="w-px h-5 bg-black/[0.08] dark:bg-white/[0.07]" />
+          <div className="flex items-center gap-1">
+            <span className="text-2xl font-semibold tabular-nums text-amber-500 dark:text-brand-yellow">{pending}</span>
+            <span className="text-xs font-medium text-lm-text3 dark:text-white/30 ml-1 mt-0.5">pending</span>
           </div>
 
-          {/* Filters row — hidden in Today view */}
-          {viewMode === "all" && (
-            <div className="mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.05] flex flex-wrap items-center gap-x-6 gap-y-3">
-
-              {/* Status */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25 mr-1">Status</span>
-                {[["all","All tasks"],["pending","Pending"],["completed","Completed"]].map(([v,l]) => (
-                  <button key={v} onClick={() => setFilter(v)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition duration-150 ${filter === v ? "bg-black/8 dark:bg-white/8 text-lm-text1 dark:text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${v === "all" ? "bg-black/30 dark:bg-white/30" : v === "pending" ? "bg-brand-yellow" : "bg-emerald-400"}`} />
-                    {l}
-                  </button>
-                ))}
+          {/* Progress bar — grows to fill remaining space */}
+          {total > 0 && (
+            <div className="flex-1 min-w-[100px] flex items-center gap-3">
+              <div className="flex-1 h-[3px] rounded-full bg-black/[0.07] dark:bg-white/[0.07] overflow-hidden">
+                <div className="h-full rounded-full bg-brand-yellow transition-all duration-700" style={{ width: `${progress}%` }} />
               </div>
-
-              <div className="w-px h-4 bg-black/[0.08] dark:bg-white/[0.08]" />
-
-              {/* Priority */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25 mr-1">Priority</span>
-                {[["all","All","bg-black/20 dark:bg-white/20"],["high","High","bg-red-400"],["medium","Medium","bg-amber-400"],["low","Low","bg-emerald-400"]].map(([v,l,dot]) => (
-                  <button key={v} onClick={() => setPriorityFilter(v)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition duration-150 ${priorityFilter === v ? "bg-black/8 dark:bg-white/8 text-lm-text1 dark:text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{l}
-                  </button>
-                ))}
-              </div>
-
-              <div className="w-px h-4 bg-black/[0.08] dark:bg-white/[0.08]" />
-
-              {/* Sort */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-lm-text3 dark:text-white/25">Sort</span>
-                <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="input-dark text-xs py-1 h-auto">
-                  {SORT_OPTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-                </select>
-              </div>
-
+              <span className="text-xs tabular-nums font-medium text-lm-text3 dark:text-white/30 shrink-0">{progress}%</span>
             </div>
           )}
         </div>
+
+        {/* ════ FILTER BAR ════ */}
+        {viewMode === "all" && (
+          <div className="mb-5 flex items-center gap-2 flex-wrap">
+
+            {/* Status tabs */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-xl border
+                            bg-black/[0.03] border-black/[0.07]
+                            dark:bg-white/[0.03] dark:border-white/[0.06]">
+              {[
+                { v: "all",       l: "All" },
+                { v: "pending",   l: "Pending" },
+                { v: "completed", l: "Done" },
+              ].map(({ v, l }) => (
+                <button key={v} onClick={() => setFilter(v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150
+                    ${filter === v
+                      ? "bg-white dark:bg-white/10 text-lm-text1 dark:text-white shadow-sm"
+                      : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            {/* Priority compact dropdown */}
+            <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+
+            {/* Sort compact dropdown */}
+            <SortDropdown value={sortOption} onChange={setSortOption} opts={SORT_OPTS} />
+
+          </div>
+        )}
 
         <div>
           {/* ════ TASK FEED ════ */}
@@ -692,9 +997,17 @@ export default function Dashboard() {
                     <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold ${viewMode === "today" ? "bg-black/20 text-brand-dark" : "bg-brand-yellow/20 text-brand-yellow"}`}>{todayCount}</span>
                   )}
                 </button>
+                <button onClick={() => setViewMode("report")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition duration-150 ${viewMode === "report" ? "bg-violet-500 text-white" : "text-lm-text3 dark:text-white/35 hover:text-lm-text1 dark:hover:text-white/60"}`}>
+                  <ClipboardList className="w-3 h-3" />Report
+                  {reportCount > 0 && (
+                    <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold ${viewMode === "report" ? "bg-white/20 text-white" : "bg-violet-400/20 text-violet-500 dark:text-violet-400"}`}>{reportCount}</span>
+                  )}
+                </button>
               </div>
 
-              {/* Layout toggle */}
+              {/* Layout toggle — hidden in report mode */}
+              {viewMode !== "report" && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-0.5 p-0.5 rounded-xl border
                                 bg-black/[0.04] border-black/[0.07]
@@ -707,6 +1020,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
+              )}
             </div>
 
             {/* Today context line */}
@@ -727,10 +1041,10 @@ export default function Dashboard() {
             )}
 
             {/* ── Quick-add ── */}
-            <QuickAdd onAdd={handleQuickAdd} />
+            {viewMode !== "report" && <QuickAdd onAdd={handleQuickAdd} />}
 
             {/* ── Add form ── */}
-            {showAddForm ? (
+            {viewMode !== "report" && (showAddForm ? (
               <div className="rounded-2xl border p-5 space-y-4 shadow-card-lift
                               border-black/[0.08] bg-white dark:border-white/[0.07] dark:bg-[#0d0d0d]">
                 <div className="flex items-center justify-between">
@@ -756,6 +1070,15 @@ export default function Dashboard() {
                     <label className="form-label-dark">Description <span className="normal-case font-normal text-lm-text3 dark:text-white/20">(optional)</span></label>
                     <textarea className="input-dark resize-none" placeholder="Add details…" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
                   </div>
+                  {/* For Report toggle */}
+                  <button type="button" onClick={() => setForReport(p => !p)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition duration-150 w-fit
+                      ${forReport
+                        ? "border-violet-400/40 bg-violet-400/8 text-violet-500 dark:text-violet-400"
+                        : "border-black/[0.08] dark:border-white/[0.08] text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white/60 hover:border-black/20 dark:hover:border-white/20"}`}>
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    {forReport ? "Marked for report" : "Mark for monthly report"}
+                  </button>
                   <div className="flex gap-2.5 pt-1">
                     <button type="submit" className="btn-primary px-5 py-2">Add task</button>
                     <button type="button" onClick={() => setShowAddForm(false)} className="btn-ghost-dark px-5 py-2">Cancel</button>
@@ -769,10 +1092,20 @@ export default function Dashboard() {
                            dark:border-white/[0.08] dark:text-white/25 dark:hover:border-brand-yellow/40 dark:hover:text-brand-yellow/80">
                 <Plus className="w-3.5 h-3.5" />Add a task
               </button>
+            ) /* end add form conditional */ )}
+
+            {/* ════ REPORT VIEW ════ */}
+            {viewMode === "report" && (
+              <ReportView
+                tasks={tasks}
+                reportMonth={reportMonth}
+                setReportMonth={setReportMonth}
+                onToggleForReport={toggleForReport}
+              />
             )}
 
-            {/* ════ KANBAN ════ */}
-            {layoutMode === "kanban" ? (
+            {/* ════ KANBAN + LIST ════ */}
+            {viewMode !== "report" && (layoutMode === "kanban" ? (
               <div className="overflow-x-auto -mx-1 px-1 pb-4">
                 <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleKanbanDragEnd}>
                   <div className="flex gap-4 min-w-[600px]">
@@ -887,6 +1220,7 @@ export default function Dashboard() {
                                   ) : (
                                     <>
                                       <button onClick={() => toggleFocusToday(task)} className={`p-1.5 rounded-lg transition ${task.focusToday ? "text-brand-yellow hover:bg-brand-yellow/8" : "text-lm-text3 dark:text-white/[0.15] hover:text-brand-yellow/60 hover:bg-black/5 dark:hover:bg-white/5"}`} title={task.focusToday ? "Remove from today" : "Add to today"}><Sun className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => toggleForReport(task)} className={`p-1.5 rounded-lg transition ${task.forReport ? "text-violet-500 dark:text-violet-400 hover:bg-violet-400/8" : "text-lm-text3 dark:text-white/[0.15] hover:text-violet-400/70 hover:bg-black/5 dark:hover:bg-white/5"}`} title={task.forReport ? "Remove from report" : "Mark for monthly report"}><FileText className="w-3.5 h-3.5" /></button>
                                       <button onClick={() => startEdit(task)} className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/[0.15] hover:text-lm-text1 dark:hover:text-white/70 hover:bg-black/5 dark:hover:bg-white/5" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
                                       <button onClick={() => handleDeleteTask(task._id)} className="p-1.5 rounded-lg transition text-lm-text3 dark:text-white/[0.15] hover:text-red-400 hover:bg-red-400/8" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                                     </>
@@ -896,13 +1230,24 @@ export default function Dashboard() {
 
                               {/* Row 2: priority editor or badges */}
                               {isEdit ? (
-                                <div className="pl-7">
-                                  <label className="form-label-dark">Priority</label>
-                                  <PriorityPicker value={editingPriority} onChange={setEditingPriority} />
+                                <div className="pl-7 flex flex-wrap items-center gap-3">
+                                  <div>
+                                    <label className="form-label-dark">Priority</label>
+                                    <PriorityPicker value={editingPriority} onChange={setEditingPriority} />
+                                  </div>
+                                  <button type="button" onClick={() => setEditingForReport(p => !p)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition duration-150 mt-4
+                                      ${editingForReport
+                                        ? "border-violet-400/40 bg-violet-400/8 text-violet-500 dark:text-violet-400"
+                                        : "border-black/[0.08] dark:border-white/[0.08] text-lm-text3 dark:text-white/30 hover:text-lm-text1 dark:hover:text-white/60"}`}>
+                                    <FileText className="w-3 h-3 shrink-0" />
+                                    {editingForReport ? "For report" : "Mark for report"}
+                                  </button>
                                 </div>
                               ) : (
                                 <div className="pl-7 flex flex-wrap items-center gap-1">
                                   <PriorityBadge priority={tp} />
+                                  {task.forReport && <span className="badge bg-violet-400/8 text-violet-500 dark:text-violet-400"><FileText className="w-2.5 h-2.5"/>For report</span>}
                                   {task.focusToday && <span className="badge bg-brand-yellow/8 text-brand-yellow"><Sun className="w-2.5 h-2.5"/>Today</span>}
                                   {isToday(task.dueDate) && !task.focusToday && <span className="badge bg-sky-400/8 text-sky-400"><Calendar className="w-2.5 h-2.5"/>Due today</span>}
                                   {soon && !isToday(task.dueDate) && <span className="badge bg-amber-400/8 text-amber-400"><Clock className="w-2.5 h-2.5"/>Due soon</span>}
@@ -956,8 +1301,7 @@ export default function Dashboard() {
                 </SortableContext>
               </DndContext>
             ) /* end list */
-            )} {/* end layoutMode */}
-
+            ))} {/* end layoutMode/report guard */}
           </section>
         </div>
       </main>
